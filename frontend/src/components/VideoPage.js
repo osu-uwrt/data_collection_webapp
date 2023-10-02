@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import Draggable from 'react-draggable';
@@ -28,8 +28,10 @@ function VideoPage() {
   }, [videoName]);
 
   const updateFrame = (frameNumber) => {
-    setCurrentFrame(frameNumber);
-    // TODO: Fetch bounding boxes for the new frame here
+    if (frameNumber >= 0 && frameNumber < data.total_frames) {
+        setCurrentFrame(frameNumber);
+        // TODO: Fetch bounding boxes for the new frame here
+    }
   };
 
   const addBoundingBox = () => {
@@ -130,7 +132,6 @@ function VideoPage() {
         </div>
 
         <h3>Current frame: {currentFrame} / {data.total_frames - 1}</h3>
-        <h3>Draggable: {isDraggable.toString()}</h3>
 
     </div>
 );
