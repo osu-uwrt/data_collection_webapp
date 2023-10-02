@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import Draggable from 'react-draggable';
@@ -16,38 +16,60 @@ function VideoPage() {
   const [currentFrame, setCurrentFrame] = useState(0);
   const [boundingBoxes, setBoundingBoxes] = useState({});
   const [isDraggable, setIsDraggable] = useState(true);
+  const [lastBoxSize, setLastBoxSize] = useState({ width: 100, height: 100 });
 
   useEffect(() => {
     async function fetchData() {
       const response = await axios.get(`http://localhost:5000/video/${videoName}`);
       setData(response.data);
-      setBoundingBoxes({}); // Reset bounding boxes for the new video
-      // TODO: Fetch bounding boxes for the video and frame here, if they exist
+      setBoundingBoxes({}); 
     }
     fetchData();
   }, [videoName]);
 
+  const handleKeyDown = useCallback((event) => {
+    if (event.key === 'ArrowLeft') {
+      updateFrame(currentFrame - 1);
+    } else if (event.key === 'ArrowRight') {
+      updateFrame(currentFrame + 1);
+    }
+  }, [currentFrame]);
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
+
   const updateFrame = (frameNumber) => {
     if (frameNumber >= 0 && frameNumber < data.total_frames) {
       setCurrentFrame(frameNumber);
-      // TODO: Fetch bounding boxes for the new frame here
     }
   };
 
-  const addBoundingBox = () => {
-    const newBox = {
-      top: 50, left: 50, width: 100, height: 100 // default position and size
+  const addBoundingBox = (event) => {
+        if (event.ctrlKey) {
+            const boundingRect = event.target.getBoundingClientRect();
+            const xPosition = event.clientX - boundingRect.left;
+            const yPosition = event.clientY - boundingRect.top;
+            const newBox = {
+                top: yPosition - lastBoxSize.height / 2,
+                left: xPosition - lastBoxSize.width / 2,
+                width: lastBoxSize.width,
+                height: lastBoxSize.height
+            };
+            setBoundingBoxes(prevBoxes => ({
+                ...prevBoxes,
+                [currentFrame]: [...(prevBoxes[currentFrame] || []), newBox]
+            }));
+        }
     };
-    setBoundingBoxes(prevBoxes => ({
-      ...prevBoxes,
-      [currentFrame]: [...(prevBoxes[currentFrame] || []), newBox]
-    }));
-  };
 
   const currentFrameBoxes = boundingBoxes[currentFrame] || [];
 
   return (
-    <div id="frame-viewer">
+    <div id="frame-viewer" onClick={addBoundingBox}>
       <h2>Viewing frames for video: {data.video_name}</h2>
       
       <div className="frame-container" 
@@ -65,6 +87,7 @@ function VideoPage() {
               position={{ x: box.left, y: box.top }}
               disabled={!isDraggable}
               onStop={(e, data) => {
+                  setLastBoxSize({ width: box.width, height: box.height })
                   setBoundingBoxes(prevBoxes => {
                     const updatedBoxes = { ...prevBoxes };
                     if (updatedBoxes[currentFrame]) {
@@ -86,6 +109,7 @@ function VideoPage() {
                           setIsDraggable(false);
                       }}
                       onResizeStop={(e, data) => {
+                        setLastBoxSize(data.size)
                         e.stopPropagation();
                         setTimeout(() => {
                             setIsDraggable(true);
