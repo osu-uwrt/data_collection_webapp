@@ -1,0 +1,22 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Labeling Dashboard</title>
+</head>
+<body>
+
+<h1>Uploaded Videos</h1>
+<div>
+    {% for video_name, first_frame in videos.items() %}
+    <div class="video-preview">
+        <a href="{{ url_for('page2', video_name=video_name) }}">
+            <img src="{{ url_for('serve_frame', video_name=video_name, filename='frame0.jpg') }}" alt="{{ video_name }}" width="240">
+        </a>
+        <p>{{ video_name }}</p>
+    </div>
+    {% endfor %}
+</div>
+
+</body>
+</html>

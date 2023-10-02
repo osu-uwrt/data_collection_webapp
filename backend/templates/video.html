@@ -1,0 +1,76 @@
+<!-- templates/video.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Frame Viewer - {{ video_name }}</title>
+    <style>
+        /* You can expand upon these styles to better style your app */
+        #frame-viewer {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+
+<div id="frame-viewer">
+    <h2>Viewing frames for video: {{ video_name }}</h2>
+    
+    <!-- Frame display -->
+    <img id="current-frame" src="" alt="Current frame" width="800">
+    
+    <!-- Navigation controls -->
+    <div>
+        <button onclick="showPreviousFrame()">Previous</button>
+        <button onclick="showNextFrame()">Next</button>
+    </div>
+    
+    <!-- Frame slider for quick navigation -->
+    <div>
+        <input type="range" id="frame-slider" min="0" max="{{ total_frames - 1 }}" value="0" oninput="updateFrame(this.value)">
+    </div>
+
+    <!-- Inside the <div id="frame-viewer"> -->
+    <h3>Current frame: <span id="frame-number">0</span> / {{ total_frames - 1 }}</h3>
+
+    
+    <!-- Placeholder for bounding box tools and information -->
+    <div id="bbox-info">
+        <!-- Bounding box tools go here in the future -->
+    </div>
+</div>
+
+<div id="totalFrames" style="display:none;">{{ total_frames }}</div>
+
+<script>
+    // Fetching the totalFrames variable from the hidden div
+    let totalFrames = parseInt(document.getElementById('totalFrames').textContent);
+
+    let currentFrameNumber = 0;
+
+    function updateFrame(frameNumber) {
+        // Ensure that the frame number is always treated as an integer
+        currentFrameNumber = parseInt(frameNumber, 10);
+        document.getElementById('current-frame').src = `/data/frames/{{ video_name }}/frame${currentFrameNumber}.jpg`;
+        document.getElementById('frame-slider').value = currentFrameNumber;
+        document.getElementById('frame-number').textContent = currentFrameNumber;
+    }
+
+    function showNextFrame() {
+        if (currentFrameNumber < totalFrames - 1) {
+            updateFrame(currentFrameNumber + 1);
+        }
+    }
+
+    function showPreviousFrame() {
+        if (currentFrameNumber > 0) {
+            updateFrame(currentFrameNumber - 1);
+        }
+    }
+
+    // Initialize by showing the first frame
+    updateFrame(0);
+
+</script>
+</body>
+</html>
