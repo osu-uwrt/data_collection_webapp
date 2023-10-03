@@ -1,11 +1,55 @@
 import React, { useRef, useEffect, useState } from "react";
 
-function BoundingBox({ videoWidth, videoHeight }) {
+function BoundingBox({
+  videoWidth,
+  videoHeight,
+  currentFrame,
+  frameBoxes,
+  setFrameBoxes,
+  onDeleteRef,
+}) {
   const canvasRef = useRef(null);
-  const [boxes, setBoxes] = useState([]);
+  const getCurrentBoxes = () => frameBoxes[currentFrame] || [];
+  const [boxes, setBoxes] = useState(getCurrentBoxes());
   const [dragging, setDragging] = useState(false);
   const [dragData, setDragData] = useState({ boxIndex: null, corner: null });
   const [selected, setSelected] = useState(null);
+
+  useEffect(() => {
+    setBoxes(getCurrentBoxes());
+    setSelected(null);
+  }, [currentFrame]);
+
+  const handleDelete = () => {
+    if (selected !== null) {
+      const updatedBoxes = [...boxes];
+      updatedBoxes.splice(selected, 1);
+      setBoxes(updatedBoxes);
+      setSelected(null);
+    }
+  };
+
+  useEffect(() => {
+    if (onDeleteRef && typeof onDeleteRef.current !== "undefined") {
+      onDeleteRef.current = handleDelete;
+    }
+  }, [boxes, selected]);
+
+  useEffect(() => {
+    if (JSON.stringify(boxes) !== JSON.stringify(frameBoxes[currentFrame])) {
+      setFrameBoxes((prevFrameBoxes) => ({
+        ...prevFrameBoxes,
+        [currentFrame]: boxes,
+      }));
+    }
+  }, [boxes]);
+
+  useEffect(() => {
+    setFrameBoxes((prevFrameBoxes) => ({
+      ...prevFrameBoxes,
+      [currentFrame]: boxes,
+    }));
+  }, [boxes, currentFrame, setFrameBoxes]);
 
   useEffect(() => {
     const canvas = canvasRef.current;

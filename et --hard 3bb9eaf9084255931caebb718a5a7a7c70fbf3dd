@@ -1,0 +1,84 @@
+[33mcommit 3bb9eaf9084255931caebb718a5a7a7c70fbf3dd[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m
+Author: zehdari <zehdari@live.com>
+Date:   Tue Oct 3 13:46:51 2023 -0400
+
+    Cleared default README
+
+[33mcommit bf38db11ce0691982ec5f1a85b6dcd3bf1920282[m
+Merge: 1838a8b bceb258
+Author: zehdari <zehdari@live.com>
+Date:   Tue Oct 3 13:45:21 2023 -0400
+
+    Merge branch 'master' of https://github.com/osu-uwrt/data_collection_webapp
+
+[33mcommit 1838a8b52b8f37de66a0b0b7db8670ea597a624c[m
+Author: zehdari <zehdari@live.com>
+Date:   Tue Oct 3 13:42:41 2023 -0400
+
+    modified .gitignore
+
+[33mcommit bceb258a0378035baa0c36b9557f605e340d77b0[m
+Author: zehdari <68253750+zehdari@users.noreply.github.com>
+Date:   Tue Oct 3 13:42:27 2023 -0400
+
+    Delete .vscode directory
+
+[33mcommit 36bd01bb2b88f4698408837473389708464e6011[m
+Author: zehdari <zehdari@live.com>
+Date:   Tue Oct 3 13:40:57 2023 -0400
+
+    Added selection state to boxes, movement now restricted to container
+
+[33mcommit 143d2a5d3793f00b4c0d401e90d2b05c9df3c64f[m
+Author: zehdari <zehdari@live.com>
+Date:   Tue Oct 3 09:21:32 2023 -0400
+
+    Created custom BoundingBox component, removed previous handler logic
+
+[33mcommit 6d952063b982f97b0c32423cab7ac94a019d0a53[m
+Author: zehdari <zehdari@live.com>
+Date:   Sun Oct 1 22:26:56 2023 -0400
+
+    Formatting
+
+[33mcommit 94bcbf4fcb341a4ad742e20b588b6c0a5f48d51d[m
+Author: zehdari <zehdari@live.com>
+Date:   Sun Oct 1 21:51:39 2023 -0400
+
+    Removed BoundingBox.js
+
+[33mcommit d48c3f4e7c14fcd2d36e8d19ebc2fde079a93ef0[m
+Author: zehdari <zehdari@live.com>
+Date:   Sun Oct 1 21:48:31 2023 -0400
+
+    Added arrow keys for frames, ctrl+click for adding box, storing last box state to mimic when creating new box
+
+[33mcommit 688ab635addfcef19426f053a86917df2ddc4059[m
+Author: zehdari <zehdari@live.com>
+Date:   Sun Oct 1 21:37:13 2023 -0400
+
+    Box state now tied to frame
+
+[33mcommit baa627f85173dd5417b0890bfb2b8d2597132d18[m
+Author: zehdari <zehdari@live.com>
+Date:   Sun Oct 1 21:29:48 2023 -0400
+
+    Fixed negative frame issue, removed draggable flag text
+
+[33mcommit e81f1b64a1a6c990d2141d39029f02b0eccb5111[m
+Author: zehdari <zehdari@live.com>
+Date:   Sun Oct 1 21:16:49 2023 -0400
+
+    Adding frontend content
+
+[33mcommit 2f503e2f5989b5d3885308c31d90a890da2ca920[m
+Author: zehdari <zehdari@live.com>
+Date:   Sun Oct 1 21:16:31 2023 -0400
+
+    Removed the frontend submodule reference
+
+[33mcommit 765664ef96928bc0c509a3a1871ee73f25129467[m
+Author: zehdari <zehdari@live.com>
+Date:   Sun Oct 1 21:13:44 2023 -0400
+
+    Initial commit

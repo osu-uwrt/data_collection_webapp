@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import BoundingBox from "./BoundingBox";
@@ -12,6 +12,8 @@ function VideoPage() {
     video_width: 0,
   });
   const [currentFrame, setCurrentFrame] = useState(0);
+  const [frameBoxes, setFrameBoxes] = useState({});
+  const deleteRef = useRef(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -33,6 +35,12 @@ function VideoPage() {
     },
     [currentFrame]
   );
+
+  const handleDeleteClick = () => {
+    if (deleteRef.current) {
+      deleteRef.current();
+    }
+  };
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
@@ -68,12 +76,17 @@ function VideoPage() {
         <BoundingBox
           videoWidth={data.video_width}
           videoHeight={data.video_height}
+          currentFrame={currentFrame}
+          frameBoxes={frameBoxes}
+          setFrameBoxes={setFrameBoxes}
+          onDeleteRef={deleteRef}
         />
       </div>
 
       <div>
         <button onClick={() => updateFrame(currentFrame - 1)}>Previous</button>
         <button onClick={() => updateFrame(currentFrame + 1)}>Next</button>
+        <button onClick={handleDeleteClick}>Delete Selected Box</button>
       </div>
       <div>
         <input
