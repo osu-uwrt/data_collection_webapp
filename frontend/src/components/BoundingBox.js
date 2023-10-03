@@ -5,6 +5,7 @@ function BoundingBox({ videoWidth, videoHeight }) {
   const [boxes, setBoxes] = useState([]);
   const [dragging, setDragging] = useState(false);
   const [dragData, setDragData] = useState({ boxIndex: null, corner: null });
+  const [selected, setSelected] = useState(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -13,6 +14,33 @@ function BoundingBox({ videoWidth, videoHeight }) {
       canvas.height = videoHeight;
     }
   }, [videoWidth, videoHeight]);
+
+  const boxStyles = {
+    boxStrokeColor: "red",
+    selectedBoxStrokeColor: "purple",
+    boxStrokeWidth: 2,
+    cornerFillColor: "blue",
+    cornerSize: 6,
+  };
+
+  const clampBoxToCanvas = (box, canvasWidth, canvasHeight) => {
+    const clampedBox = { ...box };
+
+    if (clampedBox.x < 0) {
+      clampedBox.x = 0;
+    }
+    if (clampedBox.y < 0) {
+      clampedBox.y = 0;
+    }
+    if (clampedBox.x + clampedBox.width > canvasWidth) {
+      clampedBox.x = canvasWidth - clampedBox.width;
+    }
+    if (clampedBox.y + clampedBox.height > canvasHeight) {
+      clampedBox.y = canvasHeight - clampedBox.height;
+    }
+
+    return clampedBox;
+  };
 
   const isWithinBoxCorner = (x, y, box) => {
     const cornerSize = 20;
@@ -38,6 +66,18 @@ function BoundingBox({ videoWidth, videoHeight }) {
     return null;
   };
 
+  const isWithinBox = (x, y, box) => {
+    if (
+      y > box.y &&
+      y < box.y + box.height &&
+      x > box.x &&
+      x < box.x + box.width
+    ) {
+      return "middle";
+    }
+    return null;
+  };
+
   const isWithinBoxSide = (x, y, box) => {
     const sideThreshold = 10;
     if (y > box.y && y < box.y + box.height) {
@@ -58,14 +98,25 @@ function BoundingBox({ videoWidth, videoHeight }) {
     for (let i = 0; i < boxes.length; i++) {
       const corner = isWithinBoxCorner(x, y, boxes[i]);
       const side = isWithinBoxSide(x, y, boxes[i]);
-      if (corner) {
+      const middle = isWithinBox(x, y, boxes[i]);
+
+      if (corner || side || middle) {
         setDragging(true);
+        setSelected(i);
+      }
+      if (corner) {
         setDragData({ boxIndex: i, corner });
         break;
       } else if (side) {
-        setDragging(true);
         setDragData({ boxIndex: i, side });
         break;
+      } else if (middle) {
+        setDragData({ boxIndex: i, middle, startX: x, startY: y });
+        break;
+      }
+
+      if (selected !== null && !dragging) {
+        setSelected(null);
       }
     }
   };
@@ -80,6 +131,7 @@ function BoundingBox({ videoWidth, videoHeight }) {
       for (let i = 0; i < boxes.length; i++) {
         const corner = isWithinBoxCorner(x, y, boxes[i]);
         const side = isWithinBoxSide(x, y, boxes[i]);
+
         if (corner) {
           overCornerOrSide = true;
           switch (corner) {
@@ -90,6 +142,8 @@ function BoundingBox({ videoWidth, videoHeight }) {
             case "topRight":
             case "bottomLeft":
               canvas.style.cursor = "nesw-resize";
+              break;
+            default:
               break;
           }
           break;
@@ -103,6 +157,8 @@ function BoundingBox({ videoWidth, videoHeight }) {
             case "topSide":
             case "bottomSide":
               canvas.style.cursor = "ns-resize";
+              break;
+            default:
               break;
           }
         }
@@ -118,7 +174,7 @@ function BoundingBox({ videoWidth, videoHeight }) {
 
     let newBox = { ...currentBox };
 
-    switch (dragData.corner || dragData.side) {
+    switch (dragData.corner || dragData.side || dragData.middle) {
       case "topLeft":
         newBox.width += newBox.x - x;
         newBox.height += newBox.y - y;
@@ -153,10 +209,24 @@ function BoundingBox({ videoWidth, videoHeight }) {
       case "bottomSide":
         newBox.height = y - newBox.y;
         break;
+      case "middle":
+        const dx = x - dragData.startX;
+        const dy = y - dragData.startY;
+
+        newBox.x += dx;
+        newBox.y += dy;
+
+        setDragData((prevDragData) => ({
+          ...prevDragData,
+          startX: x,
+          startY: y,
+        }));
+        break;
       default:
         return;
     }
 
+    newBox = clampBoxToCanvas(newBox, videoWidth, videoHeight);
     const newBoxes = [...boxes];
     newBoxes[dragData.boxIndex] = newBox;
     setBoxes(newBoxes);
@@ -165,7 +235,7 @@ function BoundingBox({ videoWidth, videoHeight }) {
   const handleMouseUp = () => {
     if (dragging) {
       setDragging(false);
-      setDragData({ boxIndex: null, corner: null });
+      setDragData({ boxIndex: null, corner: null, startX: null, startY: null });
     }
   };
 
@@ -185,27 +255,32 @@ function BoundingBox({ videoWidth, videoHeight }) {
   useEffect(() => {
     const ctx = canvasRef.current.getContext("2d");
     ctx.clearRect(0, 0, videoWidth, videoHeight);
-    boxes.forEach((box) => {
+    boxes.forEach((box, index) => {
+      ctx.strokeStyle =
+        selected === index
+          ? boxStyles.selectedBoxStrokeColor
+          : boxStyles.boxStrokeColor;
+      ctx.lineWidth = boxStyles.boxStrokeWidth;
       ctx.strokeRect(box.x, box.y, box.width, box.height);
 
-      const cornerSize = 6; // Adjust if you need to change the size of the corner boxes
       const corners = [
-        [box.x, box.y], // top-left
-        [box.x + box.width, box.y], // top-right
-        [box.x, box.y + box.height], // bottom-left
-        [box.x + box.width, box.y + box.height], // bottom-right
+        [box.x, box.y],
+        [box.x + box.width, box.y],
+        [box.x, box.y + box.height],
+        [box.x + box.width, box.y + box.height],
       ];
 
+      ctx.fillStyle = boxStyles.cornerFillColor;
       corners.forEach(([x, y]) => {
         ctx.fillRect(
-          x - cornerSize / 2,
-          y - cornerSize / 2,
-          cornerSize,
-          cornerSize
+          x - boxStyles.cornerSize / 2,
+          y - boxStyles.cornerSize / 2,
+          boxStyles.cornerSize,
+          boxStyles.cornerSize
         );
       });
     });
-  }, [boxes]);
+  }, [boxes, selected]);
 
   return (
     <canvas
@@ -214,10 +289,12 @@ function BoundingBox({ videoWidth, videoHeight }) {
       onClick={(e) => {
         if (e.ctrlKey) {
           const boundingRect = canvasRef.current.getBoundingClientRect();
-          const x = e.clientX - boundingRect.left - 50; // Centered bounding box
-          const y = e.clientY - boundingRect.top - 50; // Centered bounding box
+          const x = e.clientX - boundingRect.left - 50;
+          const y = e.clientY - boundingRect.top - 50;
 
-          setBoxes([...boxes, { x, y, width: 100, height: 100 }]);
+          let newBox = { x, y, width: 100, height: 100 };
+          newBox = clampBoxToCanvas(newBox, videoWidth, videoHeight);
+          setBoxes([...boxes, newBox]);
         }
       }}
     />
