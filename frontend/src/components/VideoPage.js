@@ -13,6 +13,7 @@ function VideoPage() {
   });
   const [currentFrame, setCurrentFrame] = useState(0);
   const [frameBoxes, setFrameBoxes] = useState({});
+  const [carryBoxes, setCarryBoxes] = useState(false);
   const deleteRef = useRef(null);
 
   useEffect(() => {
@@ -31,10 +32,16 @@ function VideoPage() {
         updateFrame(currentFrame - 1);
       } else if (event.key === "ArrowRight") {
         updateFrame(currentFrame + 1);
+      } else if (event.key === "Delete" || event.key === "Backspace") {
+        handleDeleteClick();
       }
     },
     [currentFrame]
   );
+
+  const handleCarryBoxesChange = (e) => {
+    setCarryBoxes(e.target.checked);
+  };
 
   const handleDeleteClick = () => {
     if (deleteRef.current) {
@@ -49,9 +56,19 @@ function VideoPage() {
     };
   }, [handleKeyDown]);
 
-  const updateFrame = (frameNumber) => {
-    if (frameNumber >= 0 && frameNumber < data.total_frames) {
-      setCurrentFrame(frameNumber);
+  const updateFrame = (newFrame) => {
+    if (newFrame >= 0 && newFrame < data.total_frames) {
+      setCurrentFrame(newFrame);
+
+      if (
+        carryBoxes &&
+        (!frameBoxes[newFrame] || frameBoxes[newFrame].length === 0)
+      ) {
+        setFrameBoxes((prevFrameBoxes) => ({
+          ...prevFrameBoxes,
+          [newFrame]: prevFrameBoxes[currentFrame],
+        }));
+      }
     }
   };
 
@@ -80,6 +97,7 @@ function VideoPage() {
           frameBoxes={frameBoxes}
           setFrameBoxes={setFrameBoxes}
           onDeleteRef={deleteRef}
+          carryBoxes={carryBoxes}
         />
       </div>
 
@@ -87,6 +105,14 @@ function VideoPage() {
         <button onClick={() => updateFrame(currentFrame - 1)}>Previous</button>
         <button onClick={() => updateFrame(currentFrame + 1)}>Next</button>
         <button onClick={handleDeleteClick}>Delete Selected Box</button>
+        <label>
+          <input
+            type="checkbox"
+            checked={carryBoxes}
+            onChange={handleCarryBoxesChange}
+          />
+          Carry over boxes
+        </label>
       </div>
       <div>
         <input

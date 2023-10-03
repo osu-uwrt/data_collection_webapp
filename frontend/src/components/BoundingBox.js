@@ -14,6 +14,7 @@ function BoundingBox({
   const [dragging, setDragging] = useState(false);
   const [dragData, setDragData] = useState({ boxIndex: null, corner: null });
   const [selected, setSelected] = useState(null);
+  const [lastBoxSize, setLastBoxSize] = useState({ width: 100, height: 100 });
 
   useEffect(() => {
     setBoxes(getCurrentBoxes());
@@ -26,6 +27,8 @@ function BoundingBox({
       updatedBoxes.splice(selected, 1);
       setBoxes(updatedBoxes);
       setSelected(null);
+      setDragging(false);
+      setDragData({ boxIndex: null, corner: null });
     }
   };
 
@@ -122,6 +125,22 @@ function BoundingBox({
     return null;
   };
 
+  const normalizeBox = (box) => {
+    let normalizedBox = { ...box };
+
+    if (normalizedBox.width < 0) {
+      normalizedBox.x += normalizedBox.width;
+      normalizedBox.width = Math.abs(normalizedBox.width);
+    }
+
+    if (normalizedBox.height < 0) {
+      normalizedBox.y += normalizedBox.height;
+      normalizedBox.height = Math.abs(normalizedBox.height);
+    }
+
+    return normalizedBox;
+  };
+
   const isWithinBoxSide = (x, y, box) => {
     const sideThreshold = 10;
     if (y > box.y && y < box.y + box.height) {
@@ -147,70 +166,78 @@ function BoundingBox({
       if (corner || side || middle) {
         setDragging(true);
         setSelected(i);
-      }
-      if (corner) {
-        setDragData({ boxIndex: i, corner });
-        break;
-      } else if (side) {
-        setDragData({ boxIndex: i, side });
-        break;
-      } else if (middle) {
-        setDragData({ boxIndex: i, middle, startX: x, startY: y });
-        break;
-      }
-
-      if (selected !== null && !dragging) {
-        setSelected(null);
+        setLastBoxSize({
+          width: boxes[i].width,
+          height: boxes[i].height,
+        });
+        if (corner) {
+          setDragData({ boxIndex: i, corner });
+          break;
+        } else if (side) {
+          setDragData({ boxIndex: i, side });
+          break;
+        } else if (middle) {
+          setDragData({ boxIndex: i, middle, startX: x, startY: y });
+          break;
+        }
       }
     }
+
+    if (selected !== null && !dragging) {
+      setSelected(null);
+    }
   };
+
   const handleMouseMove = (event) => {
     const x = event.offsetX;
     const y = event.offsetY;
     const canvas = canvasRef.current;
 
-    let overCornerOrSide = false;
+    if (dragData.boxIndex !== null && dragData.boxIndex >= boxes.length) {
+      setDragging(false);
+      setDragData({ boxIndex: null, corner: null });
+      return;
+    }
 
     if (!dragging) {
-      for (let i = 0; i < boxes.length; i++) {
+      let cursorStyle = "default";
+      for (let i = boxes.length - 1; i >= 0; i--) {
         const corner = isWithinBoxCorner(x, y, boxes[i]);
         const side = isWithinBoxSide(x, y, boxes[i]);
+        const middle = isWithinBox(x, y, boxes[i]);
 
         if (corner) {
-          overCornerOrSide = true;
           switch (corner) {
             case "topLeft":
             case "bottomRight":
-              canvas.style.cursor = "nwse-resize";
+              cursorStyle = "nwse-resize";
               break;
             case "topRight":
             case "bottomLeft":
-              canvas.style.cursor = "nesw-resize";
+              cursorStyle = "nesw-resize";
               break;
             default:
               break;
           }
-          break;
         } else if (side) {
-          overCornerOrSide = true;
           switch (side) {
             case "leftSide":
             case "rightSide":
-              canvas.style.cursor = "ew-resize";
+              cursorStyle = "ew-resize";
               break;
             case "topSide":
             case "bottomSide":
-              canvas.style.cursor = "ns-resize";
+              cursorStyle = "ns-resize";
               break;
             default:
               break;
           }
+        } else if (middle) {
+          cursorStyle = "move";
         }
       }
 
-      if (!overCornerOrSide) {
-        canvas.style.cursor = "default";
-      }
+      canvas.style.cursor = cursorStyle;
     }
 
     if (!dragging) return;
@@ -277,8 +304,24 @@ function BoundingBox({
   };
 
   const handleMouseUp = () => {
-    if (dragging) {
+    if (dragData.boxIndex !== null && dragData.boxIndex >= boxes.length) {
       setDragging(false);
+      setDragData({ boxIndex: null, corner: null });
+      return;
+    }
+
+    if (dragging && dragData.boxIndex !== null) {
+      setLastBoxSize({
+        width: boxes[dragData.boxIndex].width,
+        height: boxes[dragData.boxIndex].height,
+      });
+      setDragging(false);
+
+      const normalizedBox = normalizeBox(boxes[dragData.boxIndex]);
+      const newBoxes = [...boxes];
+      newBoxes[dragData.boxIndex] = normalizedBox;
+      setBoxes(newBoxes);
+
       setDragData({ boxIndex: null, corner: null, startX: null, startY: null });
     }
   };
@@ -333,10 +376,15 @@ function BoundingBox({
       onClick={(e) => {
         if (e.ctrlKey) {
           const boundingRect = canvasRef.current.getBoundingClientRect();
-          const x = e.clientX - boundingRect.left - 50;
-          const y = e.clientY - boundingRect.top - 50;
+          const x = e.clientX - boundingRect.left;
+          const y = e.clientY - boundingRect.top;
 
-          let newBox = { x, y, width: 100, height: 100 };
+          let newBox = {
+            x: x - lastBoxSize.width / 2,
+            y: y - lastBoxSize.height / 2,
+            width: lastBoxSize.width,
+            height: lastBoxSize.height,
+          };
           newBox = clampBoxToCanvas(newBox, videoWidth, videoHeight);
           setBoxes([...boxes, newBox]);
         }
