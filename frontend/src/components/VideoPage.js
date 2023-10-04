@@ -182,9 +182,7 @@ function VideoPage() {
               min="0"
               max={data.total_frames - 1}
               value={currentFrame}
-              onChange={(e) =>
-                updateFrame(parseInt(e.target.value), carryBoxes)
-              }
+              onChange={(e) => updateFrame(parseInt(e.target.value), false)}
             />
           </div>
           <h3>
