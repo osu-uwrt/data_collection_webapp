@@ -25,16 +25,18 @@ function IndexPage() {
 
   return (
     <div className="index-page">
-      <h1>Available Videos</h1>
+      <h1 className="title">Available Videos</h1>
       <div className="video-list">
         {videos.map((videoName) => (
           <div key={videoName} className="video-item">
-            <a href={`/video/${videoName}`}>
-              <img
-                src={`http://localhost:5000/data/frames/${videoName}/frame0.jpg`}
-                alt={`First frame of ${videoName}`}
-              />
-              <p>{videoName}</p>
+            <a href={`/video/${videoName}`} className="video-link">
+              <div className="video-thumbnail">
+                <img
+                  src={`http://localhost:5000/data/frames/${videoName}/frame0.jpg`}
+                  alt={`First frame of ${videoName}`}
+                />
+              </div>
+              <p className="video-name">{videoName}</p>
             </a>
           </div>
         ))}

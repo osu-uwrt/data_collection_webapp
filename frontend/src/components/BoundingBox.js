@@ -369,6 +369,18 @@ function BoundingBox({
     });
   }, [boxes, selected]);
 
+  const createBox = (x, y) => {
+    let newBox = {
+      x: x - lastBoxSize.width / 2,
+      y: y - lastBoxSize.height / 2,
+      width: lastBoxSize.width,
+      height: lastBoxSize.height,
+    };
+
+    newBox = clampBoxToCanvas(newBox, videoWidth, videoHeight);
+    setBoxes((prevBoxes) => [...prevBoxes, newBox]);
+  };
+
   return (
     <canvas
       ref={canvasRef}
@@ -378,15 +390,7 @@ function BoundingBox({
           const boundingRect = canvasRef.current.getBoundingClientRect();
           const x = e.clientX - boundingRect.left;
           const y = e.clientY - boundingRect.top;
-
-          let newBox = {
-            x: x - lastBoxSize.width / 2,
-            y: y - lastBoxSize.height / 2,
-            width: lastBoxSize.width,
-            height: lastBoxSize.height,
-          };
-          newBox = clampBoxToCanvas(newBox, videoWidth, videoHeight);
-          setBoxes([...boxes, newBox]);
+          createBox(x, y);
         }
       }}
     />
