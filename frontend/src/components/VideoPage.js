@@ -158,10 +158,16 @@ function VideoPage() {
           </div>
 
           <div>
-            <button onClick={() => updateFrame(currentFrame - 1, carryBoxes)}>
+            <button
+              onClick={() => updateFrame(currentFrame - 1, carryBoxes)}
+              disabled={currentFrame === 0}
+            >
               Previous
             </button>
-            <button onClick={() => updateFrame(currentFrame + 1, carryBoxes)}>
+            <button
+              onClick={() => updateFrame(currentFrame + 1, carryBoxes)}
+              disabled={currentFrame === data.total_frames - 1}
+            >
               Next
             </button>
             <button onClick={handleDeleteClick}>Delete Selected Box</button>
