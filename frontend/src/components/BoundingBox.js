@@ -157,6 +157,7 @@ function BoundingBox({
   const handleMouseDown = (event) => {
     const x = event.offsetX;
     const y = event.offsetY;
+    let newlySelectedBoxIndex = null;
 
     for (let i = 0; i < boxes.length; i++) {
       const corner = isWithinBoxCorner(x, y, boxes[i]);
@@ -165,7 +166,7 @@ function BoundingBox({
 
       if (corner || side || middle) {
         setDragging(true);
-        setSelected(i);
+        newlySelectedBoxIndex = i;
         setLastBoxSize({
           width: boxes[i].width,
           height: boxes[i].height,
@@ -183,8 +184,10 @@ function BoundingBox({
       }
     }
 
-    if (selected !== null && !dragging) {
+    if (newlySelectedBoxIndex === null && !dragging) {
       setSelected(null);
+    } else if (newlySelectedBoxIndex !== null) {
+      setSelected(newlySelectedBoxIndex);
     }
   };
 
