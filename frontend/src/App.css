@@ -92,6 +92,7 @@ body {
 }
 
 #video-page {
+  background-color: var(--primary-bg);
   align-items: flex-start;
   display: flex;
   width: 100vw;

@@ -10,7 +10,7 @@ import Slider from "@mui/material/Slider";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
-/* TODO FIX VERTICAL HEIGHT OF WINDOW TO BE WINDOW SIZE INCLUDING HEADER
+/* TODO 
 FIX HEADER SIZE TO SAME SIZE AS VIDEO ON SMALL RESIZE
 LABEL MENU
 ADJUST PADDING BETWEEN SLIDER/BUTTONS
@@ -81,10 +81,19 @@ function VideoPage() {
     setCarryBoxes(e.target.checked);
   };
 
-  const handleDeleteClick = () => {
-    if (deleteRef.current) {
+  const handleDeleteClick = (boxIndex) => {
+    const updatedBoxesForFrame = [...(frameBoxes[currentFrame] || [])];
+
+    if (boxIndex !== undefined) {
+      updatedBoxesForFrame.splice(boxIndex, 1);
+    } else if (deleteRef.current) {
       deleteRef.current();
     }
+
+    setFrameBoxes((prev) => ({
+      ...prev,
+      [currentFrame]: updatedBoxesForFrame,
+    }));
   };
 
   const saveBoxes = async () => {
@@ -119,7 +128,12 @@ function VideoPage() {
       strokeColor: "limegreen",
       fillColor: "rgba(50, 205, 50, 0.25)",
     },
-    // ... any other classes
+    /* ... any other classes
+              {loading ? (
+            <div>Loading...</div>
+          ) : (
+            <>
+            */
   };
 
   useEffect(() => {
@@ -151,73 +165,73 @@ function VideoPage() {
 
   return (
     <div className="video-page">
-      <header className="app-header">
-        <div className="header-sidebar left-header-sidebar"></div>
-        <div className="slider-container">
-          <div className="frame-count-controls">
-            <button
-              className="frame-button"
-              onClick={() => updateFrame(currentFrame - 1, carryBoxes)}
-            >
-              <ChevronLeftIcon fontSize="large" />
-            </button>
-            <h3>
-              {currentFrame} / {data.total_frames - 1}
-            </h3>
-            <button
-              className="frame-button"
-              onClick={() => updateFrame(currentFrame + 1, carryBoxes)}
-            >
-              <ChevronRightIcon fontSize="large" />
-            </button>
-          </div>
-          <div id="frame-slider">
-            <Slider
-              size="small"
-              defaultValue={currentFrame}
-              aria-label="Small"
-              valueLabelDisplay="auto"
-              min={0}
-              max={data.total_frames - 1}
-              value={currentFrame}
-              onChange={(e, newValue) => updateFrame(newValue, false)}
-            />
-          </div>
-        </div>
-        <div className="header-sidebar right-header-sidebar"></div>
-      </header>
-      <div id="frame-viewer">
-        <div className="sidebar left-sidebar">
-          <button
-            className="icon-button"
-            onClick={handleDeleteClick}
-            title="Delete Selected Box"
-          >
-            <CloseIcon />
-          </button>
-          <button
-            className="icon-button"
-            onClick={saveBoxes}
-            title="Save Boxes"
-          >
-            <SaveIcon />
-          </button>
-          <div className="carry-boxes-control">
-            <Switch
-              checked={carryBoxes}
-              onChange={handleCarryBoxesChange}
-              name="carryBoxes"
-              aria-label="Carry over boxes toggle"
-            />
-            <label htmlFor="carryBoxes" title="Carry over boxes"></label>
-          </div>
-        </div>
+      {loading ? (
+        <div>Loading...</div>
+      ) : (
+        <>
+          <header className="app-header">
+            <div className="header-sidebar left-header-sidebar"></div>
+            <div className="slider-container">
+              <div className="frame-count-controls">
+                <button
+                  className="frame-button"
+                  onClick={() => updateFrame(currentFrame - 1, carryBoxes)}
+                >
+                  <ChevronLeftIcon fontSize="large" />
+                </button>
+                <h3>
+                  {currentFrame} / {data.total_frames - 1}
+                </h3>
+                <button
+                  className="frame-button"
+                  onClick={() => updateFrame(currentFrame + 1, carryBoxes)}
+                >
+                  <ChevronRightIcon fontSize="large" />
+                </button>
+              </div>
+              <div id="frame-slider">
+                <Slider
+                  size="small"
+                  defaultValue={currentFrame}
+                  aria-label="Small"
+                  valueLabelDisplay="auto"
+                  min={0}
+                  max={data.total_frames - 1}
+                  value={currentFrame}
+                  onChange={(e, newValue) => updateFrame(newValue, false)}
+                />
+              </div>
+            </div>
+            <div className="header-sidebar right-header-sidebar"></div>
+          </header>
+          <div id="frame-viewer">
+            <div className="sidebar left-sidebar">
+              <button
+                className="icon-button"
+                onClick={handleDeleteClick}
+                title="Delete Selected Box"
+              >
+                <CloseIcon />
+              </button>
+              <button
+                className="icon-button"
+                onClick={saveBoxes}
+                title="Save Boxes"
+              >
+                <SaveIcon />
+              </button>
+              <div className="carry-boxes-control">
+                <Switch
+                  checked={carryBoxes}
+                  onChange={handleCarryBoxesChange}
+                  name="carryBoxes"
+                  aria-label="Carry over boxes toggle"
+                />
+                <label htmlFor="carryBoxes" title="Carry over boxes"></label>
+              </div>
+            </div>
 
-        <div className="main-content">
-          {loading ? (
-            <div>Loading...</div>
-          ) : (
-            <>
+            <div className="main-content">
               <h2>Viewing frames for video: {data.video_name}</h2>
               <div
                 className="frame-container"
@@ -245,27 +259,28 @@ function VideoPage() {
                   boxClasses={boxClasses}
                 />
               </div>
-            </>
-          )}
-        </div>
+            </div>
 
-        <div className="sidebar right-sidebar">
-          <LabelMenu
-            boundingBoxes={frameBoxes}
-            currentFrame={currentFrame}
-            onClassChange={(index, newClass) => {
-              const updatedBoxesForFrame = [
-                ...(frameBoxes[currentFrame] || []),
-              ];
-              updatedBoxesForFrame[index].class = newClass;
-              setFrameBoxes((prev) => ({
-                ...prev,
-                [currentFrame]: updatedBoxesForFrame,
-              }));
-            }}
-          />
-        </div>
-      </div>
+            <div className="sidebar right-sidebar">
+              <LabelMenu
+                boundingBoxes={frameBoxes}
+                currentFrame={currentFrame}
+                onClassChange={(index, newClass) => {
+                  const updatedBoxesForFrame = [
+                    ...(frameBoxes[currentFrame] || []),
+                  ];
+                  updatedBoxesForFrame[index].class = newClass;
+                  setFrameBoxes((prev) => ({
+                    ...prev,
+                    [currentFrame]: updatedBoxesForFrame,
+                  }));
+                }}
+                onDelete={handleDeleteClick}
+              />
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

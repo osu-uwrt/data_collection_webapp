@@ -7,8 +7,23 @@ import {
   MenuItem,
   Typography,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 
-const LabelMenu = ({ boundingBoxes, currentFrame, onClassChange }) => {
+const LabelMenu = ({
+  boundingBoxes,
+  currentFrame,
+  onClassChange,
+  onDelete,
+}) => {
+  const classColors = {
+    class1: "cyan",
+    class2: "limegreen",
+    class3: "yellow",
+  };
+
+  const handleClassChange = (index, newClass) => {
+    onClassChange(index, newClass, classColors[newClass] || "white");
+  };
   const boxesForCurrentFrame = boundingBoxes[currentFrame] || [];
 
   return (
@@ -22,7 +37,7 @@ const LabelMenu = ({ boundingBoxes, currentFrame, onClassChange }) => {
             <ListItemText primary={`Box ${index + 1}`} />
             <Select
               value={box.class}
-              onChange={(e) => onClassChange(index, e.target.value)}
+              onChange={(e) => handleClassChange(index, e.target.value)}
               variant="outlined"
               size="small"
               className="label-menu-select"
@@ -33,6 +48,13 @@ const LabelMenu = ({ boundingBoxes, currentFrame, onClassChange }) => {
               <MenuItem value="class3">Class 3</MenuItem>
               {/* Add more classes as needed */}
             </Select>
+            <button
+              className="icon-button"
+              onClick={() => onDelete(index)}
+              title="Delete Box"
+            >
+              <DeleteIcon />
+            </button>
           </ListItem>
         ))}
       </List>

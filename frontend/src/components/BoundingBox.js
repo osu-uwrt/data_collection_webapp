@@ -10,23 +10,19 @@ function BoundingBox({
   boxClasses,
 }) {
   const canvasRef = useRef(null);
-  const getCurrentBoxes = () => frameBoxes[currentFrame] || [];
-  const [boxes, setBoxes] = useState(getCurrentBoxes());
   const [dragging, setDragging] = useState(false);
   const [dragData, setDragData] = useState({ boxIndex: null, corner: null });
   const [selected, setSelected] = useState(null);
   const [lastBoxSize, setLastBoxSize] = useState({ width: 100, height: 100 });
 
-  useEffect(() => {
-    setBoxes(getCurrentBoxes());
-    setSelected(null);
-  }, [currentFrame]);
-
   const handleDelete = () => {
     if (selected !== null) {
-      const updatedBoxes = [...boxes];
-      updatedBoxes.splice(selected, 1);
-      setBoxes(updatedBoxes);
+      const updatedBoxesForFrame = [...frameBoxes[currentFrame]];
+      updatedBoxesForFrame.splice(selected, 1);
+      setFrameBoxes((prev) => ({
+        ...prev,
+        [currentFrame]: updatedBoxesForFrame,
+      }));
       setSelected(null);
       setDragging(false);
       setDragData({ boxIndex: null, corner: null });
@@ -37,23 +33,13 @@ function BoundingBox({
     if (onDeleteRef && typeof onDeleteRef.current !== "undefined") {
       onDeleteRef.current = handleDelete;
     }
-  }, [boxes, selected]);
+  }, [frameBoxes[currentFrame], selected]);
 
   useEffect(() => {
-    if (JSON.stringify(boxes) !== JSON.stringify(frameBoxes[currentFrame])) {
-      setFrameBoxes((prevFrameBoxes) => ({
-        ...prevFrameBoxes,
-        [currentFrame]: boxes,
-      }));
+    if (onDeleteRef && typeof onDeleteRef.current !== "undefined") {
+      onDeleteRef.current = handleDelete;
     }
-  }, [boxes]);
-
-  useEffect(() => {
-    setFrameBoxes((prevFrameBoxes) => ({
-      ...prevFrameBoxes,
-      [currentFrame]: boxes,
-    }));
-  }, [boxes, currentFrame, setFrameBoxes]);
+  }, [frameBoxes, selected]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -152,17 +138,17 @@ function BoundingBox({
     const y = event.offsetY;
     let newlySelectedBoxIndex = null;
 
-    for (let i = 0; i < boxes.length; i++) {
-      const corner = isWithinBoxCorner(x, y, boxes[i]);
-      const side = isWithinBoxSide(x, y, boxes[i]);
-      const middle = isWithinBox(x, y, boxes[i]);
+    for (let i = 0; i < frameBoxes[currentFrame].length; i++) {
+      const corner = isWithinBoxCorner(x, y, frameBoxes[currentFrame][i]);
+      const side = isWithinBoxSide(x, y, frameBoxes[currentFrame][i]);
+      const middle = isWithinBox(x, y, frameBoxes[currentFrame][i]);
 
       if (corner || side || middle) {
         setDragging(true);
         newlySelectedBoxIndex = i;
         setLastBoxSize({
-          width: boxes[i].width,
-          height: boxes[i].height,
+          width: frameBoxes[currentFrame][i].width,
+          height: frameBoxes[currentFrame][i].height,
         });
         if (corner) {
           setDragData({ boxIndex: i, corner });
@@ -189,7 +175,10 @@ function BoundingBox({
     const y = event.offsetY;
     const canvas = canvasRef.current;
 
-    if (dragData.boxIndex !== null && dragData.boxIndex >= boxes.length) {
+    if (
+      dragData.boxIndex !== null &&
+      dragData.boxIndex >= frameBoxes[currentFrame].length
+    ) {
       setDragging(false);
       setDragData({ boxIndex: null, corner: null });
       return;
@@ -197,10 +186,10 @@ function BoundingBox({
 
     if (!dragging) {
       let cursorStyle = "default";
-      for (let i = boxes.length - 1; i >= 0; i--) {
-        const corner = isWithinBoxCorner(x, y, boxes[i]);
-        const side = isWithinBoxSide(x, y, boxes[i]);
-        const middle = isWithinBox(x, y, boxes[i]);
+      for (let i = frameBoxes[currentFrame].length - 1; i >= 0; i--) {
+        const corner = isWithinBoxCorner(x, y, frameBoxes[currentFrame][i]);
+        const side = isWithinBoxSide(x, y, frameBoxes[currentFrame][i]);
+        const middle = isWithinBox(x, y, frameBoxes[currentFrame][i]);
 
         if (corner) {
           switch (corner) {
@@ -237,7 +226,7 @@ function BoundingBox({
     }
 
     if (!dragging) return;
-    const currentBox = boxes[dragData.boxIndex];
+    const currentBox = frameBoxes[currentFrame][dragData.boxIndex];
 
     let newBox = { ...currentBox };
 
@@ -293,14 +282,19 @@ function BoundingBox({
         return;
     }
 
-    newBox = clampBoxToCanvas(newBox, videoWidth, videoHeight);
-    const newBoxes = [...boxes];
-    newBoxes[dragData.boxIndex] = newBox;
-    setBoxes(newBoxes);
+    const updatedBoxesForFrame = [...frameBoxes[currentFrame]];
+    updatedBoxesForFrame[dragData.boxIndex] = newBox;
+    setFrameBoxes((prev) => ({
+      ...prev,
+      [currentFrame]: updatedBoxesForFrame,
+    }));
   };
 
   const handleMouseUp = () => {
-    if (dragData.boxIndex !== null && dragData.boxIndex >= boxes.length) {
+    if (
+      dragData.boxIndex !== null &&
+      dragData.boxIndex >= (frameBoxes[currentFrame] || []).length
+    ) {
       setDragging(false);
       setDragData({ boxIndex: null, corner: null });
       return;
@@ -308,15 +302,21 @@ function BoundingBox({
 
     if (dragging && dragData.boxIndex !== null) {
       setLastBoxSize({
-        width: boxes[dragData.boxIndex].width,
-        height: boxes[dragData.boxIndex].height,
+        width: frameBoxes[currentFrame][dragData.boxIndex].width,
+        height: frameBoxes[currentFrame][dragData.boxIndex].height,
       });
       setDragging(false);
 
-      const normalizedBox = normalizeBox(boxes[dragData.boxIndex]);
-      const newBoxes = [...boxes];
-      newBoxes[dragData.boxIndex] = normalizedBox;
-      setBoxes(newBoxes);
+      const normalizedBox = normalizeBox(
+        frameBoxes[currentFrame][dragData.boxIndex]
+      );
+      const updatedBoxesForFrame = [...frameBoxes[currentFrame]];
+      updatedBoxesForFrame[dragData.boxIndex] = normalizedBox;
+
+      setFrameBoxes((prev) => ({
+        ...prev,
+        [currentFrame]: updatedBoxesForFrame,
+      }));
 
       setDragData({ boxIndex: null, corner: null, startX: null, startY: null });
     }
@@ -333,12 +333,12 @@ function BoundingBox({
       canvas.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [boxes, dragging, dragData]);
+  }, [frameBoxes[currentFrame], dragging, dragData]);
 
   useEffect(() => {
     const ctx = canvasRef.current.getContext("2d");
     ctx.clearRect(0, 0, videoWidth, videoHeight);
-    boxes.forEach((box, index) => {
+    (frameBoxes[currentFrame] || []).forEach((box, index) => {
       const boxClass = box.class || "default";
       const { strokeColor, fillColor } = boxClasses[boxClass] || {};
 
@@ -387,7 +387,7 @@ function BoundingBox({
       ctx.fill();
       ctx.stroke();
     });
-  }, [boxes, boxClasses, selected]);
+  }, [frameBoxes, boxClasses, selected, currentFrame]);
 
   const createBox = (x, y) => {
     let newBox = {
@@ -398,7 +398,10 @@ function BoundingBox({
     };
 
     newBox = clampBoxToCanvas(newBox, videoWidth, videoHeight);
-    setBoxes((prevBoxes) => [...prevBoxes, newBox]);
+    setFrameBoxes((prev) => ({
+      ...prev,
+      [currentFrame]: [...(frameBoxes[currentFrame] || []), newBox],
+    }));
   };
 
   return (
