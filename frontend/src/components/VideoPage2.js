@@ -3,13 +3,13 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import BoundingBox from "./BoundingBox";
 import LabelMenu from "./LabelMenu";
-import CloseIcon from "@mui/icons-material/Close";
-import SaveIcon from "@mui/icons-material/Save";
-import Switch from "@mui/material/Switch";
-import Slider from "@mui/material/Slider";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import IconButton from "@mui/material/IconButton";
+import CloseIcon from "@material-ui/icons/Close";
+import SaveIcon from "@material-ui/icons/Save";
+import Switch from "@material-ui/core/Switch";
+import Slider from "@material-ui/core/Slider";
+import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
+import ChevronRightIcon from "@material-ui/icons/ChevronRight";
+import { makeStyles } from "@material-ui/core/styles";
 
 function VideoPage() {
   const { videoName } = useParams();
@@ -135,25 +135,7 @@ function VideoPage() {
   return (
     <div>
       <header className="app-header">
-        <div className="header-sidebar left-header-sidebar"></div>
         <div className="slider-container">
-          <div className="frame-count-controls">
-            <button
-              className="frame-button"
-              onClick={() => updateFrame(currentFrame - 1, carryBoxes)}
-            >
-              <ChevronLeftIcon fontSize="large" />
-            </button>
-            <h3>
-              {currentFrame} / {data.total_frames - 1}
-            </h3>
-            <button
-              className="frame-button"
-              onClick={() => updateFrame(currentFrame + 1, carryBoxes)}
-            >
-              <ChevronRightIcon fontSize="large" />
-            </button>
-          </div>
           <div id="frame-slider">
             <Slider
               size="small"
@@ -166,8 +148,20 @@ function VideoPage() {
               onChange={(e, newValue) => updateFrame(newValue, false)}
             />
           </div>
+          <div className="frame-count-controls">
+            <button onClick={() => updateFrame(currentFrame - 1, carryBoxes)}>
+              <ChevronLeftIcon
+                onClick={() => updateFrame(currentFrame - 1, carryBoxes)}
+              />
+            </button>
+            <h3>
+              {currentFrame} / {data.total_frames - 1}
+            </h3>
+            <button onClick={() => updateFrame(currentFrame + 1, carryBoxes)}>
+              <ChevronRightIcon />
+            </button>
+          </div>
         </div>
-        <div className="header-sidebar right-header-sidebar"></div>
       </header>
       <div id="frame-viewer">
         <div className="sidebar left-sidebar">
@@ -190,7 +184,7 @@ function VideoPage() {
               checked={carryBoxes}
               onChange={handleCarryBoxesChange}
               name="carryBoxes"
-              aria-label="Carry over boxes toggle" // Adjusted for MUI v5
+              inputProps={{ "aria-label": "Carry over boxes toggle" }}
             />
             <label htmlFor="carryBoxes" title="Carry over boxes"></label>
           </div>

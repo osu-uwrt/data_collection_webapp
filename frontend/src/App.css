@@ -1,8 +1,26 @@
 /* App.css */
 
+:root {
+  /* Primary Colors */
+  --primary-bg: #0f1114;
+  --secondary-bg: #1f2329;
+
+  /* Text Colors */
+  --primary-text: #f5f5f5;
+  --secondary-text: #bbb;
+  --highlight-text: #007bff;
+
+  /* Other UI Colors */
+  --ui-hover: #555;
+  --ui-shadow: rgba(0, 0, 0, 0.1);
+  --ui-disabled: #333;
+  --ui-border: #007bff;
+  --ui-bg-hover: #007bff;
+}
+
 .index-page {
   font-family: "Roboto", sans-serif;
-  background-color: #181818;
+  background-color: var(--primary-bg);
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -18,7 +36,7 @@
 }
 
 .video-item {
-  background-color: #252525;
+  background-color: var(--secondary-bg);
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -61,7 +79,7 @@
 }
 
 body {
-  background-color: #121212;
+  background-color: var(--primary-bg); /* Slightly bluish tint for body */
   color: #f5f5f5;
 }
 
@@ -74,18 +92,60 @@ body {
 }
 
 #frame-viewer {
+  align-items: flex-start;
   display: flex;
-  flex-direction: column;
+  width: 100vw; /* Full width of the viewport */
+  height: 100vh; /* Full height of the viewport */
+}
+
+.sidebar {
+  height: 100%; /* Full height of the parent container */
+  overflow-y: auto;
+}
+
+.left-sidebar {
+  background-color: var(--primary-bg);
+  flex: 1;
+  max-width: 80px;
+}
+.right-sidebar {
+  background-color: var(--secondary-bg);
+  flex: 2; /* Making the right sidebar twice as large 16181c as the left */
+  max-width: 300px; /* Adjust this value to fit your design */
+}
+
+.frame-count-controls button {
+  background: none; /* Removes the background */
+  border: none; /* Removes the border */
+  padding: 0; /* Removes padding */
+  cursor: pointer; /* Adds the pointer cursor */
+}
+
+.frame-button svg {
+  /* Targets the SVG within the button */
+  width: 40px; /* Adjust to the desired width */
+  height: 40px; /* Adjust to the desired height */
+}
+
+.frame-count-controls {
+  display: flex;
   align-items: center;
-  font-family: "Roboto", sans-serif;
-  margin: 20px 0;
+  justify-content: center; /* This keeps everything centered */
+  gap: 10px; /* Gives a gap between the items */
+}
+
+.frame-count-controls h3 {
+  margin: 0; /* Reset margin for better alignment */
+  display: flex;
+  align-items: center; /* Vertical alignment to center */
+  justify-content: center; /* Horizontal alignment to center */
 }
 
 .frame-container {
-  position: relative;
-  background-color: #252525;
-  border: 2px solid #bbb;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  flex-grow: 1; /* Allow it to grow and occupy the space */
+  width: 100%; /* Take the full width of its parent */
+  display: flex;
+  justify-content: center; /* Center the content horizontally */
 }
 
 h2,
@@ -94,15 +154,13 @@ h3 {
 }
 
 .videoFrame {
-  max-width: 100%;
-  display: block;
+  width: 100%; /* It will fill the width of the container */
+  height: 100%; /* It will fill the height of the container */
+  object-fit: contain; /* This will ensure the image maintains its aspect ratio without getting cut off */
 }
 
 #frame-slider {
-  width: 100%;
-  margin: 20px auto;
-  background-color: #252525;
-  color: #f5f5f5;
+  width: 30%;
 }
 
 h2 {
@@ -153,4 +211,99 @@ h3 {
   margin-top: 10px;
   font-weight: 500;
   color: #007bff;
+}
+
+.main-content {
+  flex: 5;
+  background-color: var(--primary-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.label-menu {
+  flex-basis: 250px; /* adjust width as necessary */
+  background-color: #f5f5f5;
+  padding: 15px;
+  box-shadow: -2px 0px 5px 0px rgba(0, 0, 0, 0.2);
+}
+
+.controls {
+  width: 100%; /* Take the full width of its parent */
+  display: flex;
+  justify-content: space-between; /* Distribute buttons and controls evenly */
+  padding: 10px 0;
+}
+
+.slider-container {
+  width: 100%; /* Take the full width of its parent */
+  display: flex;
+  flex-direction: column; /* Stack the slider and label vertically */
+  align-items: center;
+  padding: 20px 0;
+  flex: 1;
+}
+
+.app-header {
+  background-color: var(
+    --secondary-bg
+  ); /* A dark shade similar to your sidebars */
+  width: 100vw; /* Full width */
+  height: 80px; /* Adjust if needed */
+  display: flex;
+  align-items: center; /* To center everything horizontally */
+  justify-content: space-between; /* Horizontally center the header content */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* A subtle shadow for depth */
+  z-index: 1000; /* Ensure the header stays on top */
+}
+
+.frame-button {
+  padding: 10px; /* Provides spacing around the icon */
+  margin: 10px; /* Provides spacing between buttons */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border-style: hidden;
+}
+
+.icon-button {
+  background-color: var(
+    --secondary-bg
+  ); /* Change this to whatever color you prefer */
+  border-radius: 50%; /* Makes it circular */
+  padding: 10px; /* Provides spacing around the icon */
+  margin: 20px 10px; /* Provides spacing between buttons */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.3s; /* Optional: for a smooth color transition */
+  border-style: hidden;
+}
+
+.icon-button:hover {
+  background-color: #555; /* Change this to a slightly lighter or different color for hover effect */
+}
+
+.carry-boxes-control {
+  display: flex;
+  align-items: center;
+  margin: 10px;
+}
+
+.myCheckbox input[type="checkbox"]::before {
+  display: none;
+}
+
+.header-sidebar {
+  flex: none;
+}
+
+.left-header-sidebar {
+  flex-basis: 80px; /* Set the same width as your left-sidebar */
+}
+
+.right-header-sidebar {
+  flex-basis: 300px; /* Set the same width as your right-sidebar */
 }
