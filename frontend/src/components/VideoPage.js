@@ -86,14 +86,13 @@ function VideoPage() {
 
     if (boxIndex !== undefined) {
       updatedBoxesForFrame.splice(boxIndex, 1);
+      setFrameBoxes((prev) => ({
+        ...prev,
+        [currentFrame]: updatedBoxesForFrame,
+      }));
     } else if (deleteRef.current) {
       deleteRef.current();
     }
-
-    setFrameBoxes((prev) => ({
-      ...prev,
-      [currentFrame]: updatedBoxesForFrame,
-    }));
   };
 
   const saveBoxes = async () => {

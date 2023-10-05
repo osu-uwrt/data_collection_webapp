@@ -36,12 +36,6 @@ function BoundingBox({
   }, [frameBoxes[currentFrame], selected]);
 
   useEffect(() => {
-    if (onDeleteRef && typeof onDeleteRef.current !== "undefined") {
-      onDeleteRef.current = handleDelete;
-    }
-  }, [frameBoxes, selected]);
-
-  useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
       canvas.width = videoWidth;
