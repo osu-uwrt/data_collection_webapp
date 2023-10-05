@@ -7,6 +7,7 @@ function BoundingBox({
   frameBoxes,
   setFrameBoxes,
   onDeleteRef,
+  boxClasses,
 }) {
   const canvasRef = useRef(null);
   const getCurrentBoxes = () => frameBoxes[currentFrame] || [];
@@ -61,14 +62,6 @@ function BoundingBox({
       canvas.height = videoHeight;
     }
   }, [videoWidth, videoHeight]);
-
-  const boxStyles = {
-    boxStrokeColor: "red",
-    selectedBoxStrokeColor: "purple",
-    boxStrokeWidth: 2,
-    cornerFillColor: "blue",
-    cornerSize: 6,
-  };
 
   const clampBoxToCanvas = (box, canvasWidth, canvasHeight) => {
     const clampedBox = { ...box };
@@ -346,31 +339,55 @@ function BoundingBox({
     const ctx = canvasRef.current.getContext("2d");
     ctx.clearRect(0, 0, videoWidth, videoHeight);
     boxes.forEach((box, index) => {
-      ctx.strokeStyle =
-        selected === index
-          ? boxStyles.selectedBoxStrokeColor
-          : boxStyles.boxStrokeColor;
-      ctx.lineWidth = boxStyles.boxStrokeWidth;
-      ctx.strokeRect(box.x, box.y, box.width, box.height);
+      const boxClass = box.class || "default";
+      const { strokeColor, fillColor } = boxClasses[boxClass] || {};
 
-      const corners = [
-        [box.x, box.y],
-        [box.x + box.width, box.y],
-        [box.x, box.y + box.height],
-        [box.x + box.width, box.y + box.height],
-      ];
+      const isBoxSelected = index === selected;
 
-      ctx.fillStyle = boxStyles.cornerFillColor;
-      corners.forEach(([x, y]) => {
-        ctx.fillRect(
-          x - boxStyles.cornerSize / 2,
-          y - boxStyles.cornerSize / 2,
-          boxStyles.cornerSize,
-          boxStyles.cornerSize
-        );
-      });
+      if (isBoxSelected) {
+        ctx.setLineDash([5, 5]);
+        ctx.strokeStyle = "rgba(255, 0, 0, 1)";
+      } else {
+        ctx.setLineDash([]);
+        ctx.strokeStyle = strokeColor || "white";
+      }
+
+      ctx.strokeStyle = strokeColor || "white";
+      ctx.lineWidth = 2;
+
+      const radius = 2;
+      ctx.beginPath();
+      ctx.moveTo(box.x + radius, box.y);
+      ctx.lineTo(box.x + box.width - radius, box.y);
+      ctx.quadraticCurveTo(
+        box.x + box.width,
+        box.y,
+        box.x + box.width,
+        box.y + radius
+      );
+      ctx.lineTo(box.x + box.width, box.y + box.height - radius);
+      ctx.quadraticCurveTo(
+        box.x + box.width,
+        box.y + box.height,
+        box.x + box.width - radius,
+        box.y + box.height
+      );
+      ctx.lineTo(box.x + radius, box.y + box.height);
+      ctx.quadraticCurveTo(
+        box.x,
+        box.y + box.height,
+        box.x,
+        box.y + box.height - radius
+      );
+      ctx.lineTo(box.x, box.y + radius);
+      ctx.quadraticCurveTo(box.x, box.y, box.x + radius, box.y);
+      ctx.closePath();
+
+      ctx.fillStyle = fillColor || "rgba(255, 255, 255, 0.25)";
+      ctx.fill();
+      ctx.stroke();
     });
-  }, [boxes, selected]);
+  }, [boxes, boxClasses, selected]);
 
   const createBox = (x, y) => {
     let newBox = {

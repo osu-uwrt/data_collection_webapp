@@ -9,8 +9,12 @@ import Switch from "@mui/material/Switch";
 import Slider from "@mui/material/Slider";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import IconButton from "@mui/material/IconButton";
 
+/* TODO FIX VERTICAL HEIGHT OF WINDOW TO BE WINDOW SIZE INCLUDING HEADER
+FIX HEADER SIZE TO SAME SIZE AS VIDEO ON SMALL RESIZE
+LABEL MENU
+ADJUST PADDING BETWEEN SLIDER/BUTTONS
+*/
 function VideoPage() {
   const { videoName } = useParams();
   const [data, setData] = useState({
@@ -91,7 +95,7 @@ function VideoPage() {
     try {
       const response = await axios.post(
         "http://192.168.1.3:5000/save-boxes",
-        payload, // send the payload object
+        payload,
         {
           headers: {
             "Content-Type": "application/json",
@@ -103,6 +107,18 @@ function VideoPage() {
       console.error("Failed to save boxes:", error);
       alert("Failed to save boxes. Please try again.");
     }
+  };
+
+  const boxClasses = {
+    person: {
+      strokeColor: "cyan",
+      fillColor: "rgba(0, 255, 255, 0.25)",
+    },
+    car: {
+      strokeColor: "limegreen",
+      fillColor: "rgba(50, 205, 50, 0.25)",
+    },
+    // ... any other classes
   };
 
   useEffect(() => {
@@ -133,7 +149,7 @@ function VideoPage() {
   };
 
   return (
-    <div>
+    <div className="video-page">
       <header className="app-header">
         <div className="header-sidebar left-header-sidebar"></div>
         <div className="slider-container">
@@ -190,7 +206,7 @@ function VideoPage() {
               checked={carryBoxes}
               onChange={handleCarryBoxesChange}
               name="carryBoxes"
-              aria-label="Carry over boxes toggle" // Adjusted for MUI v5
+              aria-label="Carry over boxes toggle"
             />
             <label htmlFor="carryBoxes" title="Carry over boxes"></label>
           </div>
@@ -225,6 +241,7 @@ function VideoPage() {
                   setFrameBoxes={setFrameBoxes}
                   onDeleteRef={deleteRef}
                   carryBoxes={carryBoxes}
+                  boxClasses={boxClasses}
                 />
               </div>
             </>
@@ -232,7 +249,20 @@ function VideoPage() {
         </div>
 
         <div className="sidebar right-sidebar">
-          {/* Place your right sidebar content here */}
+          <LabelMenu
+            boundingBoxes={frameBoxes}
+            currentFrame={currentFrame}
+            onClassChange={(index, newClass) => {
+              const updatedBoxesForFrame = [
+                ...(frameBoxes[currentFrame] || []),
+              ];
+              updatedBoxesForFrame[index].class = newClass;
+              setFrameBoxes((prev) => ({
+                ...prev,
+                [currentFrame]: updatedBoxesForFrame,
+              }));
+            }}
+          />
         </div>
       </div>
     </div>
