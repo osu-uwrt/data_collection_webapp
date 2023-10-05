@@ -9,7 +9,7 @@ function IndexPage() {
   useEffect(() => {
     const fetchVideos = async () => {
       try {
-        const response = await axios.get("http://192.168.1.3:5000/");
+        const response = await axios.get("http://localhost:5000/");
         if (Array.isArray(response.data)) {
           setVideos(response.data);
         } else {
@@ -32,7 +32,7 @@ function IndexPage() {
             <Link to={`/video/${videoName}`} className="video-link">
               <div className="video-thumbnail">
                 <img
-                  src={`http://192.168.1.3:5000/data/frames/${videoName}/frame0.jpg`}
+                  src={`http://localhost:5000/data/frames/${videoName}/frame0.jpg`}
                   alt={`First frame of ${videoName}`}
                 />
               </div>

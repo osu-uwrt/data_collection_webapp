@@ -30,6 +30,10 @@ function BoundingBox({
   };
 
   useEffect(() => {
+    setSelected(null);
+  }, [currentFrame]);
+
+  useEffect(() => {
     if (onDeleteRef && typeof onDeleteRef.current !== "undefined") {
       onDeleteRef.current = handleDelete;
     }
@@ -132,6 +136,7 @@ function BoundingBox({
     const y = event.offsetY;
     let newlySelectedBoxIndex = null;
 
+    if (!frameBoxes[currentFrame]) return;
     for (let i = 0; i < frameBoxes[currentFrame].length; i++) {
       const corner = isWithinBoxCorner(x, y, frameBoxes[currentFrame][i]);
       const side = isWithinBoxSide(x, y, frameBoxes[currentFrame][i]);
@@ -171,6 +176,7 @@ function BoundingBox({
 
     if (
       dragData.boxIndex !== null &&
+      frameBoxes[currentFrame] &&
       dragData.boxIndex >= frameBoxes[currentFrame].length
     ) {
       setDragging(false);
@@ -180,6 +186,7 @@ function BoundingBox({
 
     if (!dragging) {
       let cursorStyle = "default";
+      if (!frameBoxes[currentFrame]) return;
       for (let i = frameBoxes[currentFrame].length - 1; i >= 0; i--) {
         const corner = isWithinBoxCorner(x, y, frameBoxes[currentFrame][i]);
         const side = isWithinBoxSide(x, y, frameBoxes[currentFrame][i]);
@@ -287,6 +294,7 @@ function BoundingBox({
   const handleMouseUp = () => {
     if (
       dragData.boxIndex !== null &&
+      frameBoxes[currentFrame] &&
       dragData.boxIndex >= (frameBoxes[currentFrame] || []).length
     ) {
       setDragging(false);

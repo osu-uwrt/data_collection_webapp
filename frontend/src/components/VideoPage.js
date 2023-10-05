@@ -32,7 +32,7 @@ function VideoPage() {
   const fetchVideoData = async () => {
     try {
       const videoResponse = await axios.get(
-        `http://192.168.1.3:5000/video/${videoName}`
+        `http://localhost:5000/video/${videoName}`
       );
       setData(videoResponse.data);
     } catch (error) {
@@ -43,7 +43,7 @@ function VideoPage() {
   const fetchBoxesData = async () => {
     try {
       const boxesResponse = await axios.get(
-        `http://192.168.1.3:5000/data/frames/${videoName}/boxes.json`
+        `http://localhost:5000/data/frames/${videoName}/boxes.json`
       );
       setFrameBoxes(boxesResponse.data.boxes || {});
     } catch (error) {
@@ -102,7 +102,7 @@ function VideoPage() {
 
     try {
       const response = await axios.post(
-        "http://192.168.1.3:5000/save-boxes",
+        "http://localhost:5000/save-boxes",
         payload,
         {
           headers: {
@@ -243,7 +243,7 @@ function VideoPage() {
                 <img
                   id="current-frame"
                   className="videoFrame"
-                  src={`http://192.168.1.3:5000/data/frames/${data.video_name}/frame${currentFrame}.jpg`}
+                  src={`http://localhost:5000/data/frames/${data.video_name}/frame${currentFrame}.jpg`}
                   alt="Current frame"
                 />
                 <BoundingBox
