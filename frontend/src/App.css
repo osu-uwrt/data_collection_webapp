@@ -225,13 +225,6 @@ h3 {
   align-items: center;
 }
 
-.label-menu {
-  flex-basis: 250px;
-  background-color: #f5f5f5;
-  padding: 15px;
-  box-shadow: -2px 0px 5px 0px rgba(0, 0, 0, 0.2);
-}
-
 .controls {
   width: 100%;
   display: flex;
@@ -313,4 +306,29 @@ h3 {
   background-color: var(--secondary-bg);
   padding: 15px;
   box-shadow: -2px 0px 5px 0px rgba(0, 0, 0, 0.2);
+}
+
+.large-select {
+  font-size: 1.5rem;
+  width: 100%;
+  background-color: var(--secondary-bg);
+  color: var(--primary-text);
+}
+
+.large-select .MuiSelect-select {
+  color: var(--primary-text);
+}
+
+.MuiMenu-paper .MuiPaper-root {
+  background-color: var(--primary-bg);
+}
+
+.MuiMenuItem-root {
+  color: var(--primary-text);
+}
+.label-menu-item {
+  height: 50px;
+  display: flex;
+  align-items: center; /* Ensures vertical centering of children elements */
+  margin-bottom: 20px;
 }

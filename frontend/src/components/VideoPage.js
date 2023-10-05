@@ -3,7 +3,6 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import BoundingBox from "./BoundingBox";
 import LabelMenu from "./LabelMenu";
-import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
 import Switch from "@mui/material/Switch";
 import Slider from "@mui/material/Slider";
@@ -118,20 +117,10 @@ function VideoPage() {
   };
 
   const boxClasses = {
-    person: {
-      strokeColor: "cyan",
-      fillColor: "rgba(0, 255, 255, 0.25)",
-    },
-    car: {
-      strokeColor: "limegreen",
-      fillColor: "rgba(50, 205, 50, 0.25)",
-    },
-    /* ... any other classes
-              {loading ? (
-            <div>Loading...</div>
-          ) : (
-            <>
-            */
+    class1: { strokeColor: "cyan", fillColor: "rgba(0, 255, 255, 0.25)" },
+    class2: { strokeColor: "limegreen", fillColor: "rgba(50, 205, 50, 0.25)" },
+    class3: { strokeColor: "yellow", fillColor: "rgba(255, 255, 0, 0.25)" },
+    // Add more classes and their colors as necessary
   };
 
   useEffect(() => {
@@ -206,13 +195,6 @@ function VideoPage() {
             <div className="sidebar left-sidebar">
               <button
                 className="icon-button"
-                onClick={handleDeleteClick}
-                title="Delete Selected Box"
-              >
-                <CloseIcon />
-              </button>
-              <button
-                className="icon-button"
                 onClick={saveBoxes}
                 title="Save Boxes"
               >
@@ -274,6 +256,7 @@ function VideoPage() {
                   }));
                 }}
                 onDelete={handleDeleteClick}
+                boxClasses={boxClasses}
               />
             </div>
           </div>

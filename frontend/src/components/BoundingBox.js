@@ -397,6 +397,7 @@ function BoundingBox({
       y: y - lastBoxSize.height / 2,
       width: lastBoxSize.width,
       height: lastBoxSize.height,
+      class: "class1",
     };
 
     newBox = clampBoxToCanvas(newBox, videoWidth, videoHeight);

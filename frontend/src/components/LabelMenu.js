@@ -14,6 +14,7 @@ const LabelMenu = ({
   currentFrame,
   onClassChange,
   onDelete,
+  boxClasses,
 }) => {
   const classColors = {
     class1: "cyan",
@@ -34,13 +35,21 @@ const LabelMenu = ({
       <List>
         {boxesForCurrentFrame.map((box, index) => (
           <ListItem key={index} dense divider className="label-menu-item">
-            <ListItemText primary={`Box ${index + 1}`} />
+            <div
+              style={{
+                height: "100%",
+                width: "10px",
+                backgroundColor: boxClasses[box.class]?.strokeColor || "gray",
+                marginRight: "8px",
+                borderRadius: "5px",
+              }}
+            />
             <Select
               value={box.class}
               onChange={(e) => handleClassChange(index, e.target.value)}
               variant="outlined"
               size="small"
-              className="label-menu-select"
+              className="label-menu-select large-select"
             >
               {/* Here you can list your possible classes for the bounding box */}
               <MenuItem value="class1">Class 1</MenuItem>
