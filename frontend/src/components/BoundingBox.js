@@ -14,6 +14,11 @@ function BoundingBox({
   const [dragData, setDragData] = useState({ boxIndex: null, corner: null });
   const [selected, setSelected] = useState(null);
   const [lastBoxSize, setLastBoxSize] = useState({ width: 100, height: 100 });
+  const [creatingBox, setCreatingBox] = useState(false);
+  const [initialPosition, setInitialPosition] = useState({ x: 0, y: 0 });
+
+  const MIN_WIDTH = 5;
+  const MIN_HEIGHT = 5;
 
   const handleDelete = () => {
     if (selected !== null) {
@@ -115,6 +120,9 @@ function BoundingBox({
       normalizedBox.height = Math.abs(normalizedBox.height);
     }
 
+    normalizedBox.width = Math.max(normalizedBox.width, MIN_WIDTH);
+    normalizedBox.height = Math.max(normalizedBox.height, MIN_HEIGHT);
+
     return normalizedBox;
   };
 
@@ -136,6 +144,23 @@ function BoundingBox({
     const y = event.offsetY;
     let newlySelectedBoxIndex = null;
 
+    if (event.ctrlKey) {
+      setCreatingBox(true);
+      setInitialPosition({ x, y });
+      const newBox = {
+        x: x,
+        y: y,
+        width: 0,
+        height: 0,
+        class: "class1",
+      };
+      setFrameBoxes((prev) => ({
+        ...prev,
+        [currentFrame]: [...(frameBoxes[currentFrame] || []), newBox],
+      }));
+      setDragData({ boxIndex: frameBoxes[currentFrame]?.length || 0 }); // Assuming boxIndex is set to the last box in the array
+      return;
+    }
     if (!frameBoxes[currentFrame]) return;
     for (let i = 0; i < frameBoxes[currentFrame].length; i++) {
       const corner = isWithinBoxCorner(x, y, frameBoxes[currentFrame][i]);
@@ -186,6 +211,20 @@ function BoundingBox({
 
     if (!dragging) {
       let cursorStyle = "default";
+      if (creatingBox) {
+        const currentBox = frameBoxes[currentFrame][dragData.boxIndex];
+        let newBox = { ...currentBox };
+        newBox.width = x - initialPosition.x;
+        newBox.height = y - initialPosition.y;
+        const updatedBoxesForFrame = [...frameBoxes[currentFrame]];
+        updatedBoxesForFrame[dragData.boxIndex] = newBox;
+        setFrameBoxes((prev) => ({
+          ...prev,
+          [currentFrame]: updatedBoxesForFrame,
+        }));
+        return;
+      }
+
       if (!frameBoxes[currentFrame]) return;
       for (let i = frameBoxes[currentFrame].length - 1; i >= 0; i--) {
         const corner = isWithinBoxCorner(x, y, frameBoxes[currentFrame][i]);
@@ -279,6 +318,7 @@ function BoundingBox({
           startY: y,
         }));
         break;
+
       default:
         return;
     }
@@ -293,6 +333,36 @@ function BoundingBox({
   };
 
   const handleMouseUp = () => {
+    if (creatingBox) {
+      setCreatingBox(false);
+      const normalizedBox = normalizeBox(
+        frameBoxes[currentFrame][dragData.boxIndex]
+      );
+
+      if (
+        normalizedBox.width < MIN_WIDTH ||
+        normalizedBox.height < MIN_HEIGHT
+      ) {
+        const updatedBoxesForFrame = [...frameBoxes[currentFrame]];
+        updatedBoxesForFrame.splice(dragData.boxIndex, 1);
+        setFrameBoxes((prev) => ({
+          ...prev,
+          [currentFrame]: updatedBoxesForFrame,
+        }));
+        setDragData({ boxIndex: null, corner: null });
+        return;
+      }
+
+      const updatedBoxesForFrame = [...frameBoxes[currentFrame]];
+      updatedBoxesForFrame[dragData.boxIndex] = normalizedBox;
+      setFrameBoxes((prev) => ({
+        ...prev,
+        [currentFrame]: updatedBoxesForFrame,
+      }));
+      setDragData({ boxIndex: null, corner: null });
+      return;
+    }
+
     if (
       dragData.boxIndex !== null &&
       frameBoxes[currentFrame] &&
@@ -413,7 +483,7 @@ function BoundingBox({
       ref={canvasRef}
       style={{ position: "absolute", top: 0, left: 0 }}
       onClick={(e) => {
-        if (e.ctrlKey) {
+        if (e.shiftKey) {
           const boundingRect = canvasRef.current.getBoundingClientRect();
           const x = e.clientX - boundingRect.left;
           const y = e.clientY - boundingRect.top;
