@@ -11,7 +11,6 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
 /* TODO 
 FIX HEADER SIZE TO SAME SIZE AS VIDEO ON SMALL RESIZE
-LABEL MENU
 ADJUST PADDING BETWEEN SLIDER/BUTTONS
 */
 function VideoPage() {

@@ -283,6 +283,7 @@ function BoundingBox({
         return;
     }
 
+    newBox = clampBoxToCanvas(newBox, videoWidth, videoHeight);
     const updatedBoxesForFrame = [...frameBoxes[currentFrame]];
     updatedBoxesForFrame[dragData.boxIndex] = newBox;
     setFrameBoxes((prev) => ({
