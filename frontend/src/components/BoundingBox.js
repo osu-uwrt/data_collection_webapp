@@ -17,8 +17,8 @@ function BoundingBox({
   const [creatingBox, setCreatingBox] = useState(false);
   const [initialPosition, setInitialPosition] = useState({ x: 0, y: 0 });
 
-  const MIN_WIDTH = 5;
-  const MIN_HEIGHT = 5;
+  const MIN_WIDTH = 50;
+  const MIN_HEIGHT = 50;
 
   const handleDelete = () => {
     if (selected !== null) {
@@ -419,13 +419,12 @@ function BoundingBox({
 
       if (isBoxSelected) {
         ctx.setLineDash([5, 5]);
-        ctx.strokeStyle = "rgba(255, 0, 0, 1)";
+        ctx.strokeStyle = strokeColor || "white";
       } else {
         ctx.setLineDash([]);
         ctx.strokeStyle = strokeColor || "white";
       }
 
-      ctx.strokeStyle = strokeColor || "white";
       ctx.lineWidth = 2;
 
       const radius = 2;
@@ -456,8 +455,11 @@ function BoundingBox({
       ctx.quadraticCurveTo(box.x, box.y, box.x + radius, box.y);
       ctx.closePath();
 
-      ctx.fillStyle = fillColor || "rgba(255, 255, 255, 0.25)";
+      ctx.fillStyle = strokeColor || "white";
+      ctx.globalAlpha = 0.3;
+
       ctx.fill();
+      ctx.globalAlpha = 1;
       ctx.stroke();
     });
   }, [frameBoxes, boxClasses, selected, currentFrame]);

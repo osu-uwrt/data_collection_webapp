@@ -13,6 +13,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 FIX HEADER SIZE TO SAME SIZE AS VIDEO ON SMALL RESIZE
 ADJUST PADDING BETWEEN SLIDER/BUTTONS
 */
+
 function VideoPage() {
   const { videoName } = useParams();
   const [data, setData] = useState({
@@ -26,6 +27,26 @@ function VideoPage() {
   const [carryBoxes, setCarryBoxes] = useState(false);
   const [loading, setLoading] = useState(true);
   const deleteRef = useRef(null);
+
+  // Newly added state for class colors
+  const [classBoxes, setClassBoxes] = useState({
+    class1: { strokeColor: "cyan", fillColor: "rgba(0, 255, 255, 0.25)" },
+    class2: { strokeColor: "limegreen", fillColor: "rgba(50, 205, 50, 0.25)" },
+    class3: { strokeColor: "yellow", fillColor: "rgba(255, 255, 0, 0.25)" },
+    class4: { strokeColor: "yellow", fillColor: "rgba(255, 255, 0, 0.25)" },
+    // ... other classes
+  });
+
+  useEffect(() => {
+    const savedColors = localStorage.getItem("classBoxes");
+    if (savedColors) {
+      setClassBoxes(JSON.parse(savedColors));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("classBoxes", JSON.stringify(classBoxes));
+  }, [classBoxes]);
 
   const fetchVideoData = async () => {
     try {
@@ -113,13 +134,6 @@ function VideoPage() {
       console.error("Failed to save boxes:", error);
       alert("Failed to save boxes. Please try again.");
     }
-  };
-
-  const boxClasses = {
-    class1: { strokeColor: "cyan", fillColor: "rgba(0, 255, 255, 0.25)" },
-    class2: { strokeColor: "limegreen", fillColor: "rgba(50, 205, 50, 0.25)" },
-    class3: { strokeColor: "yellow", fillColor: "rgba(255, 255, 0, 0.25)" },
-    // Add more classes and their colors as necessary
   };
 
   useEffect(() => {
@@ -235,7 +249,7 @@ function VideoPage() {
                   setFrameBoxes={setFrameBoxes}
                   onDeleteRef={deleteRef}
                   carryBoxes={carryBoxes}
-                  boxClasses={boxClasses}
+                  boxClasses={classBoxes}
                 />
               </div>
             </div>
@@ -245,17 +259,17 @@ function VideoPage() {
                 boundingBoxes={frameBoxes}
                 currentFrame={currentFrame}
                 onClassChange={(index, newClass) => {
-                  const updatedBoxesForFrame = [
-                    ...(frameBoxes[currentFrame] || []),
-                  ];
+                  const updatedBoxesForFrame = [...frameBoxes[currentFrame]];
                   updatedBoxesForFrame[index].class = newClass;
+
                   setFrameBoxes((prev) => ({
                     ...prev,
                     [currentFrame]: updatedBoxesForFrame,
                   }));
                 }}
                 onDelete={handleDeleteClick}
-                boxClasses={boxClasses}
+                boxClasses={classBoxes}
+                setBoxClasses={setClassBoxes}
               />
             </div>
           </div>

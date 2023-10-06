@@ -1,12 +1,5 @@
-import React from "react";
-import {
-  List,
-  ListItem,
-  ListItemText,
-  Select,
-  MenuItem,
-  Typography,
-} from "@mui/material";
+import React, { useState } from "react";
+import { List, ListItem, Select, MenuItem, Typography } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 const LabelMenu = ({
@@ -15,16 +8,27 @@ const LabelMenu = ({
   onClassChange,
   onDelete,
   boxClasses,
+  setBoxClasses,
 }) => {
-  const classColors = {
-    class1: "cyan",
-    class2: "limegreen",
-    class3: "yellow",
+  const handleClassChange = (index, newClass) => {
+    onClassChange(index, newClass);
   };
 
-  const handleClassChange = (index, newClass) => {
-    onClassChange(index, newClass, classColors[newClass] || "white");
+  const handleColorChange = (e, index) => {
+    const newColor = e.target.value;
+    const currentClass = boundingBoxes[currentFrame][index].class;
+
+    setBoxClasses((prev) => ({
+      ...prev,
+      [currentClass]: {
+        ...prev[currentClass],
+        strokeColor: newColor,
+      },
+    }));
+
+    onClassChange(index, currentClass, newColor);
   };
+
   const boxesForCurrentFrame = boundingBoxes[currentFrame] || [];
 
   return (
@@ -42,6 +46,15 @@ const LabelMenu = ({
                 backgroundColor: boxClasses[box.class]?.strokeColor || "gray",
                 marginRight: "8px",
                 borderRadius: "5px",
+                cursor: "pointer",
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                const input = document.createElement("input");
+                input.type = "color";
+                input.value = boxClasses[box.class]?.strokeColor || "gray";
+                input.onchange = (e) => handleColorChange(e, index);
+                input.click();
               }}
             />
             <Select
@@ -51,11 +64,11 @@ const LabelMenu = ({
               size="small"
               className="label-menu-select large-select"
             >
-              {/* Here you can list your possible classes for the bounding box */}
-              <MenuItem value="class1">Class 1</MenuItem>
-              <MenuItem value="class2">Class 2</MenuItem>
-              <MenuItem value="class3">Class 3</MenuItem>
-              {/* Add more classes as needed */}
+              {Object.keys(boxClasses).map((boxClass) => (
+                <MenuItem key={boxClass} value={boxClass}>
+                  {boxClass.charAt(0).toUpperCase() + boxClass.slice(1)}
+                </MenuItem>
+              ))}
             </Select>
             <button
               className="icon-button"
