@@ -8,6 +8,7 @@ import Switch from "@mui/material/Switch";
 import Slider from "@mui/material/Slider";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+const BASE_URL = process.env.REACT_APP_BASE_URL;
 
 /* TODO 
 FIX HEADER SIZE TO SAME SIZE AS VIDEO ON SMALL RESIZE
@@ -50,9 +51,7 @@ function VideoPage() {
 
   const fetchVideoData = async () => {
     try {
-      const videoResponse = await axios.get(
-        `http://localhost:5000/video/${videoName}`
-      );
+      const videoResponse = await axios.get(`${BASE_URL}/video/${videoName}`);
       setData(videoResponse.data);
     } catch (error) {
       console.error("Failed to fetch video data:", error);
@@ -62,7 +61,7 @@ function VideoPage() {
   const fetchBoxesData = async () => {
     try {
       const boxesResponse = await axios.get(
-        `http://localhost:5000/data/frames/${videoName}/boxes.json`
+        `${BASE_URL}/data/frames/${videoName}/boxes.json`
       );
       setFrameBoxes(boxesResponse.data.boxes || {});
     } catch (error) {
@@ -120,15 +119,11 @@ function VideoPage() {
     };
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/save-boxes",
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await axios.post(`${BASE_URL}/save-boxes`, payload, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
       alert("Boxes saved successfully!");
     } catch (error) {
       console.error("Failed to save boxes:", error);
@@ -238,7 +233,7 @@ function VideoPage() {
                 <img
                   id="current-frame"
                   className="videoFrame"
-                  src={`http://localhost:5000/data/frames/${data.video_name}/frame${currentFrame}.jpg`}
+                  src={`${BASE_URL}/data/frames/${data.video_name}/frame${currentFrame}.jpg`}
                   alt="Current frame"
                 />
                 <BoundingBox
