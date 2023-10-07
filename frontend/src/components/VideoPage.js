@@ -105,6 +105,9 @@ function VideoPage() {
 
     if (boxIndex !== undefined) {
       updatedBoxesForFrame.splice(boxIndex, 1);
+
+      updateInterpolationNumbers(updatedBoxesForFrame);
+
       setFrameBoxes((prev) => ({
         ...prev,
         [currentFrame]: updatedBoxesForFrame,
@@ -382,6 +385,8 @@ function VideoPage() {
                 onClassChange={(index, newClass) => {
                   const updatedBoxesForFrame = [...frameBoxes[currentFrame]];
                   updatedBoxesForFrame[index].class = newClass;
+
+                  updateInterpolationNumbers(updatedBoxesForFrame);
 
                   setFrameBoxes((prev) => ({
                     ...prev,
