@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
+import { updateInterpolationNumbers } from "./utils";
 
 function BoundingBox({
   videoWidth,
@@ -9,6 +10,8 @@ function BoundingBox({
   onDeleteRef,
   boxClasses,
   showLabels,
+  runInterpolation,
+  onInterpolationCompleted,
 }) {
   const canvasRef = useRef(null);
   const [dragging, setDragging] = useState(false);
@@ -30,6 +33,7 @@ function BoundingBox({
         ...prev,
         [currentFrame]: updatedBoxesForFrame,
       }));
+      updateInterpolationNumbers(updatedBoxesForFrame);
       setSelected(null);
       setDragging(false);
       setDragData({ boxIndex: null, corner: null });
@@ -338,6 +342,119 @@ function BoundingBox({
       [currentFrame]: updatedBoxesForFrame,
     }));
   };
+
+  const validateInterpolation = (frameBoxes) => {
+    let activeInterpolationFrames = [];
+    let activeInterpolationCounts = {};
+
+    console.log("Starting validateInterpolation...");
+
+    for (let frame in frameBoxes) {
+      const boxes = frameBoxes[frame].filter((box) => box.interpolate);
+      if (boxes.length > 0) {
+        activeInterpolationFrames.push(frame);
+        let frameBoxCounts = {};
+        boxes.forEach((box) => {
+          const className = box.class;
+          frameBoxCounts[className] = (frameBoxCounts[className] || 0) + 1;
+        });
+        activeInterpolationCounts[frame] = frameBoxCounts;
+      }
+    }
+
+    console.log("Active interpolation frames:", activeInterpolationFrames);
+    console.log(
+      "Active interpolation counts by frame:",
+      activeInterpolationCounts
+    );
+
+    if (activeInterpolationFrames.length < 2) {
+      console.log("Less than 2 active interpolation frames. Exiting...");
+      return false;
+    }
+
+    let referenceFrameCounts =
+      activeInterpolationCounts[activeInterpolationFrames[0]];
+    for (let frame of activeInterpolationFrames.slice(1)) {
+      let currentFrameCounts = activeInterpolationCounts[frame];
+
+      console.log(`Frame ${frame} counts:`, currentFrameCounts);
+
+      for (let className in referenceFrameCounts) {
+        if (currentFrameCounts[className] !== referenceFrameCounts[className]) {
+          console.log(
+            `Inconsistent counts for class ${className}. Expected: ${referenceFrameCounts[className]}, Found: ${currentFrameCounts[className]}`
+          );
+          return false;
+        }
+      }
+    }
+
+    console.log("Validation passed.");
+    return true;
+  };
+
+  const performInterpolation = (frameBoxes) => {
+    const sortedFrames = Object.keys(frameBoxes).sort((a, b) => a - b);
+    let startFrame = null;
+
+    for (let i = 0; i < sortedFrames.length; i++) {
+      const frame = sortedFrames[i];
+      if (frameBoxes[frame].some((box) => box.interpolate)) {
+        if (startFrame === null) {
+          startFrame = frame;
+        } else {
+          const endFrame = frame;
+          for (
+            let boxIndex = 0;
+            boxIndex < frameBoxes[startFrame].length;
+            boxIndex++
+          ) {
+            const startBox = frameBoxes[startFrame][boxIndex];
+            const endBox = frameBoxes[endFrame][boxIndex];
+            if (
+              startBox.interpolate &&
+              endBox.interpolate &&
+              startBox.class === endBox.class
+            ) {
+              for (let j = parseInt(startFrame) + 1; j < endFrame; j++) {
+                const alpha = (j - startFrame) / (endFrame - startFrame);
+                const interpolatedBox = {
+                  x: startBox.x + alpha * (endBox.x - startBox.x),
+                  y: startBox.y + alpha * (endBox.y - startBox.y),
+                  width:
+                    startBox.width + alpha * (endBox.width - startBox.width),
+                  height:
+                    startBox.height + alpha * (endBox.height - startBox.height),
+                  class: startBox.class,
+                  interpolate: false,
+                  interpolationNumber: null,
+                };
+                frameBoxes[j][boxIndex] = interpolatedBox;
+              }
+            }
+          }
+          startFrame = endFrame;
+        }
+      }
+    }
+    return frameBoxes;
+  };
+
+  useEffect(() => {
+    if (runInterpolation) {
+      if (validateInterpolation(frameBoxes)) {
+        console.log("Interpolation Validated");
+        performInterpolation(frameBoxes);
+      } else {
+        console.log("Invalid Interpolation");
+      }
+      if (onInterpolationCompleted) {
+        console.log("Interpolation Completed");
+        onInterpolationCompleted();
+      }
+    }
+  }, [runInterpolation]);
 
   const handleMouseUp = () => {
     if (!frameBoxes[currentFrame]) return;

@@ -9,7 +9,9 @@ import LabelIcon from "@mui/icons-material/Label";
 import Slider from "@mui/material/Slider";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import "../App.css";
+import LineStyleIcon from "@mui/icons-material/LineStyle";
+import { updateInterpolationNumbers } from "./utils";
+
 const BASE_URL = process.env.REACT_APP_BASE_URL;
 
 /* TODO 
@@ -31,6 +33,7 @@ function VideoPage() {
   const [loading, setLoading] = useState(true);
   const deleteRef = useRef(null);
   const [showLabels, setShowLabels] = useState(true);
+  const [runInterpolation, setRunInterpolation] = useState(false);
 
   // Newly added state for class colors
   const [classBoxes, setClassBoxes] = useState({
@@ -137,6 +140,14 @@ function VideoPage() {
     };
   }, [handleKeyDown]);
 
+  const handleInterpolationClick = () => {
+    setRunInterpolation(true);
+  };
+
+  const onInterpolationCompleted = () => {
+    setRunInterpolation(false);
+  };
+
   const updateFrame = (newFrame, carryOver) => {
     if (newFrame >= 0 && newFrame < data.total_frames) {
       setCurrentFrame(newFrame);
@@ -162,27 +173,12 @@ function VideoPage() {
     if (updatedBoxesForFrame[index]) {
       updatedBoxesForFrame[index].interpolate =
         !updatedBoxesForFrame[index].interpolate;
-      updateInterpolationNumbers(
-        updatedBoxesForFrame,
-        updatedBoxesForFrame[index].class
-      );
+      updateInterpolationNumbers(updatedBoxesForFrame);
 
       setFrameBoxes((prev) => ({
         ...prev,
         [frame]: updatedBoxesForFrame,
       }));
-    }
-  };
-
-  const updateInterpolationNumbers = (boxesForFrame, className) => {
-    let currentInterpolationNumber = 1;
-    for (const box of boxesForFrame) {
-      if (box.interpolate && box.class === className) {
-        box.interpolationNumber = currentInterpolationNumber;
-        currentInterpolationNumber += 1;
-      } else {
-        box.interpolationNumber = null;
-      }
     }
   };
 
@@ -317,23 +313,31 @@ function VideoPage() {
                   }}
                 />
               </button>
+
               <button
                 className="icon-button"
-                onClick={saveBoxes}
-                title="Save Boxes"
+                onClick={handleInterpolationClick}
+                title="Interpolate"
               >
-                <SaveIcon />
+                <LineStyleIcon />
               </button>
               <button
                 className="icon-button"
                 onClick={() => setCarryBoxes((prev) => !prev)}
-                title="Carry over boxes"
+                title="Carry over boxes to next empty frame"
               >
                 <RepeatIcon
                   style={{
                     color: carryBoxes ? "var(--highlight-text)" : "gray",
                   }}
                 />
+              </button>
+              <button
+                className="icon-button"
+                onClick={saveBoxes}
+                title="Save Boxes"
+              >
+                <SaveIcon />
               </button>
             </div>
 
@@ -364,6 +368,8 @@ function VideoPage() {
                   carryBoxes={carryBoxes}
                   boxClasses={classBoxes}
                   showLabels={showLabels}
+                  runInterpolation={runInterpolation}
+                  onInterpolationCompleted={onInterpolationCompleted}
                 />
               </div>
             </div>
