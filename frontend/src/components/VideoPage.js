@@ -202,7 +202,9 @@ function VideoPage() {
               <div className="frame-count-controls">
                 <button
                   className="frame-button"
-                  onClick={() => updateFrame(currentFrame - 5, carryBoxes)} // Decrease by 5 frames
+                  onClick={() =>
+                    updateFrame(Math.max(0, currentFrame - 5), carryBoxes)
+                  }
                 >
                   <div className="double-chevron">
                     <ChevronLeftIcon fontSize="large" />
@@ -233,7 +235,12 @@ function VideoPage() {
 
                 <button
                   className="frame-button"
-                  onClick={() => updateFrame(currentFrame + 5, carryBoxes)} // Increase by 5 frames
+                  onClick={() =>
+                    updateFrame(
+                      Math.min(data.total_frames - 1, currentFrame + 5),
+                      carryBoxes
+                    )
+                  }
                 >
                   <div className="double-chevron">
                     <ChevronRightIcon fontSize="large" />
