@@ -343,6 +343,32 @@ function BoundingBox({
     }));
   };
 
+  const resetInterpolationFlags = (frameBoxes) => {
+    for (let frame in frameBoxes) {
+      frameBoxes[frame].forEach((box) => {
+        box.interpolate = false;
+        box.interpolationNumber = null;
+      });
+    }
+  };
+
+  const removeDuplicateBoxes = (frameBoxes) => {
+    for (let frame in frameBoxes) {
+      let uniqueBoxes = [];
+      let seenBoxStrings = new Set();
+
+      frameBoxes[frame].forEach((box) => {
+        const boxString = JSON.stringify(box);
+        if (!seenBoxStrings.has(boxString)) {
+          seenBoxStrings.add(boxString);
+          uniqueBoxes.push(box);
+        }
+      });
+
+      frameBoxes[frame] = uniqueBoxes;
+    }
+  };
+
   const validateInterpolation = (frameBoxes) => {
     let activeInterpolationFrames = [];
     let activeInterpolationCounts = {};
@@ -394,6 +420,41 @@ function BoundingBox({
     return true;
   };
 
+  const reindexBoxes = (frameBoxes) => {
+    let referenceFrame = null;
+    for (let frame in frameBoxes) {
+      if (frameBoxes[frame].some((box) => box.interpolate)) {
+        referenceFrame = frame;
+        break;
+      }
+    }
+
+    if (!referenceFrame) return;
+
+    let referenceOrder = frameBoxes[referenceFrame].map((box) => box.class);
+
+    console.log("Reference frame:", referenceFrame);
+    console.log("Reference order:", referenceOrder);
+
+    for (let frame in frameBoxes) {
+      let sortedBoxes = [];
+
+      referenceOrder.forEach((refClass) => {
+        let boxesWithRefClass = frameBoxes[frame].filter(
+          (box) => box.class === refClass
+        );
+        sortedBoxes = sortedBoxes.concat(boxesWithRefClass);
+      });
+
+      frameBoxes[frame] = sortedBoxes;
+
+      console.log(
+        `Boxes in frame ${frame} after reindexing:`,
+        frameBoxes[frame]
+      );
+    }
+  };
+
   const performInterpolation = (frameBoxes) => {
     const sortedFrames = Object.keys(frameBoxes).sort((a, b) => a - b);
     let startFrame = null;
@@ -405,35 +466,44 @@ function BoundingBox({
           startFrame = frame;
         } else {
           const endFrame = frame;
-          for (
-            let boxIndex = 0;
-            boxIndex < frameBoxes[startFrame].length;
-            boxIndex++
-          ) {
-            const startBox = frameBoxes[startFrame][boxIndex];
-            const endBox = frameBoxes[endFrame][boxIndex];
-            if (
-              startBox.interpolate &&
-              endBox.interpolate &&
-              startBox.class === endBox.class
-            ) {
-              for (let j = parseInt(startFrame) + 1; j < endFrame; j++) {
-                const alpha = (j - startFrame) / (endFrame - startFrame);
-                const interpolatedBox = {
-                  x: startBox.x + alpha * (endBox.x - startBox.x),
-                  y: startBox.y + alpha * (endBox.y - startBox.y),
-                  width:
-                    startBox.width + alpha * (endBox.width - startBox.width),
-                  height:
-                    startBox.height + alpha * (endBox.height - startBox.height),
-                  class: startBox.class,
-                  interpolate: false,
-                  interpolationNumber: null,
-                };
-                frameBoxes[j][boxIndex] = interpolatedBox;
+
+          frameBoxes[startFrame].forEach((startBox, startBoxIndex) => {
+            if (!startBox.interpolate) {
+              return;
+            }
+
+            const endBox = frameBoxes[endFrame].find(
+              (box) => box.class === startBox.class && box.interpolate
+            );
+
+            if (!endBox) {
+              return;
+            }
+
+            for (let j = parseInt(startFrame) + 1; j < endFrame; j++) {
+              const alpha = (j - startFrame) / (endFrame - startFrame);
+              const interpolatedBox = {
+                x: startBox.x + alpha * (endBox.x - startBox.x),
+                y: startBox.y + alpha * (endBox.y - startBox.y),
+                width: startBox.width + alpha * (endBox.width - startBox.width),
+                height:
+                  startBox.height + alpha * (endBox.height - startBox.height),
+                class: startBox.class,
+                interpolate: false,
+                interpolationNumber: null,
+              };
+
+              const correctIndex = frameBoxes[j].findIndex(
+                (box) => box.class === interpolatedBox.class
+              );
+
+              if (correctIndex === -1) {
+                frameBoxes[j].push(interpolatedBox);
+              } else {
+                frameBoxes[j][correctIndex] = interpolatedBox;
               }
             }
-          }
+          });
           startFrame = endFrame;
         }
       }
@@ -445,7 +515,11 @@ function BoundingBox({
     if (runInterpolation) {
       if (validateInterpolation(frameBoxes)) {
         console.log("Interpolation Validated");
+        reindexBoxes(frameBoxes);
+        removeDuplicateBoxes(frameBoxes);
+        console.log("boxes reindexed");
         performInterpolation(frameBoxes);
+        resetInterpolationFlags(frameBoxes);
       } else {
         console.log("Invalid Interpolation");
       }
@@ -608,16 +682,11 @@ function BoundingBox({
         let labelX = box.x;
         let labelY;
 
-        // 1. Check top
         if (box.y - labelHeight >= 0) {
           labelY = box.y - labelHeight;
-        }
-        // 2. Check bottom
-        else if (box.y + box.height + labelHeight <= ctx.canvas.height) {
+        } else if (box.y + box.height + labelHeight <= ctx.canvas.height) {
           labelY = box.y + box.height;
-        }
-        // 3. Place label inside the box
-        else {
+        } else {
           labelY = box.y;
         }
 
