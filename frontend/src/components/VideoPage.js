@@ -9,6 +9,7 @@ import LabelIcon from "@mui/icons-material/Label";
 import Slider from "@mui/material/Slider";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import DoubleArrowIcon from "@mui/icons-material/DoubleArrow";
 const BASE_URL = process.env.REACT_APP_BASE_URL;
 
 /* TODO 
@@ -96,10 +97,6 @@ function VideoPage() {
     [currentFrame, data.total_frames, carryBoxes]
   );
 
-  const handleCarryBoxesChange = (e) => {
-    setCarryBoxes(e.target.checked);
-  };
-
   const handleDeleteClick = (boxIndex) => {
     const updatedBoxesForFrame = [...(frameBoxes[currentFrame] || [])];
 
@@ -172,20 +169,49 @@ function VideoPage() {
               <div className="frame-count-controls">
                 <button
                   className="frame-button"
+                  onClick={() => updateFrame(currentFrame - 5, carryBoxes)} // Decrease by 5 frames
+                >
+                  <div className="double-chevron">
+                    <ChevronLeftIcon fontSize="large" />
+                    <ChevronLeftIcon
+                      fontSize="small"
+                      className="inner-chevron"
+                    />
+                  </div>
+                </button>
+
+                <button
+                  className="frame-button"
                   onClick={() => updateFrame(currentFrame - 1, carryBoxes)}
                 >
                   <ChevronLeftIcon fontSize="large" />
                 </button>
+
                 <h3>
                   {currentFrame} / {data.total_frames - 1}
                 </h3>
+
                 <button
                   className="frame-button"
                   onClick={() => updateFrame(currentFrame + 1, carryBoxes)}
                 >
                   <ChevronRightIcon fontSize="large" />
                 </button>
+
+                <button
+                  className="frame-button"
+                  onClick={() => updateFrame(currentFrame + 5, carryBoxes)} // Increase by 5 frames
+                >
+                  <div className="double-chevron">
+                    <ChevronRightIcon fontSize="large" />
+                    <ChevronRightIcon
+                      fontSize="small"
+                      className="inner-chevron"
+                    />
+                  </div>
+                </button>
               </div>
+
               <div id="frame-slider">
                 <Slider
                   size="small"

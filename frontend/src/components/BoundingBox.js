@@ -17,9 +17,10 @@ function BoundingBox({
   const [lastBoxSize, setLastBoxSize] = useState({ width: 100, height: 100 });
   const [creatingBox, setCreatingBox] = useState(false);
   const [initialPosition, setInitialPosition] = useState({ x: 0, y: 0 });
+  const [lastSelectedClass, setLastSelectedClass] = useState("class1");
 
-  const MIN_WIDTH = 50;
-  const MIN_HEIGHT = 50;
+  const MIN_WIDTH = 10;
+  const MIN_HEIGHT = 10;
 
   const handleDelete = () => {
     if (selected !== null) {
@@ -73,7 +74,7 @@ function BoundingBox({
   };
 
   const isWithinBoxCorner = (x, y, box) => {
-    const cornerSize = 20;
+    const cornerSize = 10;
     const corners = {
       topLeft: { x: box.x, y: box.y },
       topRight: { x: box.x + box.width, y: box.y },
@@ -128,7 +129,7 @@ function BoundingBox({
   };
 
   const isWithinBoxSide = (x, y, box) => {
-    const sideThreshold = 10;
+    const sideThreshold = 3;
     if (y > box.y && y < box.y + box.height) {
       if (Math.abs(x - box.x) < sideThreshold) return "leftSide";
       if (Math.abs(x - box.x - box.width) < sideThreshold) return "rightSide";
@@ -153,7 +154,7 @@ function BoundingBox({
         y: y,
         width: 0,
         height: 0,
-        class: "class1",
+        class: lastSelectedClass,
       };
       setFrameBoxes((prev) => ({
         ...prev,
@@ -192,6 +193,9 @@ function BoundingBox({
       setSelected(null);
     } else if (newlySelectedBoxIndex !== null) {
       setSelected(newlySelectedBoxIndex);
+      setLastSelectedClass(
+        frameBoxes[currentFrame][newlySelectedBoxIndex].class
+      );
     }
   };
 
@@ -354,6 +358,11 @@ function BoundingBox({
         return;
       }
 
+      setLastBoxSize({
+        width: normalizedBox.width,
+        height: normalizedBox.height,
+      });
+
       const updatedBoxesForFrame = [...frameBoxes[currentFrame]];
       updatedBoxesForFrame[dragData.boxIndex] = normalizedBox;
       setFrameBoxes((prev) => ({
@@ -509,7 +518,7 @@ function BoundingBox({
       y: y - lastBoxSize.height / 2,
       width: lastBoxSize.width,
       height: lastBoxSize.height,
-      class: "class1",
+      class: lastSelectedClass,
     };
 
     newBox = clampBoxToCanvas(newBox, videoWidth, videoHeight);
