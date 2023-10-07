@@ -481,6 +481,9 @@ function BoundingBox({
             }
 
             for (let j = parseInt(startFrame) + 1; j < endFrame; j++) {
+              if (!frameBoxes[j]) {
+                frameBoxes[j] = [];
+              }
               const alpha = (j - startFrame) / (endFrame - startFrame);
               const interpolatedBox = {
                 x: startBox.x + alpha * (endBox.x - startBox.x),

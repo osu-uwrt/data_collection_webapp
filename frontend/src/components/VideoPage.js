@@ -326,13 +326,6 @@ function VideoPage() {
 
               <button
                 className="icon-button"
-                onClick={handleInterpolationClick}
-                title="Interpolate"
-              >
-                <LineStyleIcon />
-              </button>
-              <button
-                className="icon-button"
                 onClick={() => setCarryBoxes((prev) => !prev)}
                 title="Carry over boxes to next empty frame"
               >
@@ -341,6 +334,13 @@ function VideoPage() {
                     color: carryBoxes ? "var(--highlight-text)" : "gray",
                   }}
                 />
+              </button>
+              <button
+                className="icon-button"
+                onClick={handleInterpolationClick}
+                title="Interpolate"
+              >
+                <LineStyleIcon />
               </button>
               <button
                 className="icon-button"
