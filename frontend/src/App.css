@@ -166,6 +166,8 @@ h3 {
 
 #frame-slider {
   width: 80%;
+  position: relative;
+  padding-bottom: 0px;
 }
 
 h2 {
@@ -255,16 +257,16 @@ h3 {
 }
 
 .frame-button {
-  padding: 4px; /* Adjust as needed */
+  padding: 4px;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   border-style: hidden;
-  border-radius: 5px; /* Adjust to your preference */
-  width: 40px; /* Adjust to your desired button width */
-  height: 40px; /* Adjust to your desired button height */
-  overflow: hidden; /* This ensures no child element overflows the button size */
+  border-radius: 5px;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
 }
 
 .icon-button {
@@ -347,19 +349,38 @@ h3 {
 }
 
 .double-chevron > svg:first-child {
-  margin-right: -40%; /* Adjust this percentage to increase/decrease the gap */
+  margin-right: -40%;
 }
 
 .inner-chevron {
-  margin-left: -40%; /* Adjust this percentage to increase/decrease the gap */
+  margin-left: -40%;
 }
 
-.video-page .slider-container #frame-slider .MuiSlider-mark.interpolated {
-  background-color: red !important;
-  height: 5px !important;
+.interpolation-indicators {
+  position: relative;
+  height: 10px;
 }
 
-.video-page .slider-container #frame-slider .MuiSlider-mark.non-interpolated {
-  background-color: white !important;
-  height: 5px !important;
+.interpolation-indicator {
+  position: absolute;
+  bottom: 12.5px;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 4px;
+  border-radius: 10%;
+  background-color: var(--ui-button-active);
+  cursor: pointer;
+  z-index: 1;
+}
+
+.interpolation-indicator::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  bottom: -3px;
+  left: -3px;
+  background: transparent;
+  cursor: pointer;
+  z-index: -1;
 }

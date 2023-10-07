@@ -186,10 +186,7 @@ function VideoPage() {
 
     return reducedFrames.map(({ frame, interpolate }) => ({
       value: parseInt(frame, 10),
-      style: interpolate
-        ? { height: "5px", backgroundColor: "red" }
-        : { height: "2px" },
-      className: interpolate ? "interpolated" : "non-interpolated",
+      interpolate,
     }));
   }
 
@@ -265,6 +262,21 @@ function VideoPage() {
                     },
                   }}
                 />
+                <div className="interpolation-indicators">
+                  {getSliderMarks(frameBoxes, data.total_frames).map(
+                    ({ value, interpolate }) =>
+                      interpolate ? (
+                        <div
+                          key={value}
+                          className="interpolation-indicator"
+                          style={{
+                            left: `${(value / (data.total_frames - 1)) * 100}%`,
+                          }}
+                          onClick={() => updateFrame(value, false)}
+                        />
+                      ) : null
+                  )}
+                </div>
               </div>
             </div>
             <div className="header-sidebar right-header-sidebar"></div>
