@@ -10,6 +10,7 @@ import Slider from "@mui/material/Slider";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import LineStyleIcon from "@mui/icons-material/LineStyle";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { updateInterpolationNumbers } from "./utils";
 
 const BASE_URL = process.env.REACT_APP_BASE_URL;
@@ -99,6 +100,12 @@ function VideoPage() {
     },
     [currentFrame, data.total_frames, carryBoxes]
   );
+
+  const handleDeleteAllBoxes = () => {
+    if (window.confirm("Are you sure you want to delete all boxes?")) {
+      setFrameBoxes({});
+    }
+  };
 
   const handleDeleteClick = (boxIndex) => {
     const updatedBoxesForFrame = [...(frameBoxes[currentFrame] || [])];
@@ -341,6 +348,13 @@ function VideoPage() {
                 title="Save Boxes"
               >
                 <SaveIcon />
+              </button>
+              <button
+                className="icon-button"
+                onClick={handleDeleteAllBoxes}
+                title="Delete All Boxes"
+              >
+                <DeleteIcon />
               </button>
             </div>
 
