@@ -164,7 +164,7 @@ h3 {
 }
 
 #frame-slider {
-  width: 30%;
+  width: 80%;
 }
 
 h2 {
@@ -351,4 +351,8 @@ h3 {
 
 .inner-chevron {
   margin-left: -40%; /* Adjust this percentage to increase/decrease the gap */
+}
+
+.MuiSlider-mark {
+  height: 0;
 }

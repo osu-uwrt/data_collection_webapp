@@ -338,6 +338,7 @@ function BoundingBox({
   };
 
   const handleMouseUp = () => {
+    if (!frameBoxes[currentFrame]) return;
     if (creatingBox) {
       setCreatingBox(false);
       const normalizedBox = normalizeBox(

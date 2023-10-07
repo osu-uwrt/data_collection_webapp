@@ -9,7 +9,7 @@ import LabelIcon from "@mui/icons-material/Label";
 import Slider from "@mui/material/Slider";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import DoubleArrowIcon from "@mui/icons-material/DoubleArrow";
+
 const BASE_URL = process.env.REACT_APP_BASE_URL;
 
 /* TODO 
@@ -157,6 +157,16 @@ function VideoPage() {
     }
   };
 
+  function getSliderMarks(frameBoxes) {
+    return Object.keys(frameBoxes)
+      .filter((frame) => frameBoxes[frame] && frameBoxes[frame].length > 0)
+      .map((frame) => {
+        return {
+          value: parseInt(frame, 10),
+        };
+      });
+  }
+
   return (
     <div className="video-page">
       {loading ? (
@@ -222,6 +232,12 @@ function VideoPage() {
                   max={data.total_frames - 1}
                   value={currentFrame}
                   onChange={(e, newValue) => updateFrame(newValue, false)}
+                  marks={getSliderMarks(frameBoxes)}
+                  sx={{
+                    "& .MuiSlider-mark": {
+                      height: 0.1,
+                    },
+                  }}
                 />
               </div>
             </div>
