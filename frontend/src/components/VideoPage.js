@@ -256,7 +256,7 @@ function VideoPage() {
 
             <div className="sidebar right-sidebar">
               <LabelMenu
-                key={videoName}
+                key={currentFrame}
                 boundingBoxes={frameBoxes}
                 currentFrame={currentFrame}
                 onClassChange={(index, newClass) => {
