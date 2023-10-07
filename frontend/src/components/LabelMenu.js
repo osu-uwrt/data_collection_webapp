@@ -1,6 +1,7 @@
 import React from "react";
 import { List, ListItem, Select, MenuItem, Typography } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import CircleIcon from "@mui/icons-material/Circle";
 
 const LabelMenu = ({
   boundingBoxes,
@@ -9,6 +10,7 @@ const LabelMenu = ({
   onDelete,
   boxClasses,
   setBoxClasses,
+  onToggleInterpolation,
 }) => {
   const handleClassChange = (index, newClass) => {
     onClassChange(index, newClass);
@@ -29,6 +31,10 @@ const LabelMenu = ({
     onClassChange(index, currentClass, newColor);
   };
 
+  const toggleInterpolation = (index) => {
+    onToggleInterpolation(currentFrame, index);
+  };
+
   const boxesForCurrentFrame = boundingBoxes[currentFrame] || [];
 
   return (
@@ -39,6 +45,15 @@ const LabelMenu = ({
       <List>
         {boxesForCurrentFrame.map((box, index) => (
           <ListItem key={index} dense divider className="label-menu-item">
+            <CircleIcon
+              style={{
+                color: box.interpolate ? "var(--ui-button-active)" : "gray",
+                marginRight: "5px",
+                fontSize: "7px",
+                cursor: "pointer",
+              }}
+              onClick={() => toggleInterpolation(index)}
+            />
             <div
               style={{
                 height: "100%",

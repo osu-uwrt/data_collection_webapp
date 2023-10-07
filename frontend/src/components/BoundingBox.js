@@ -155,6 +155,7 @@ function BoundingBox({
         width: 0,
         height: 0,
         class: lastSelectedClass,
+        interpolate: false,
       };
       setFrameBoxes((prev) => ({
         ...prev,
@@ -520,12 +521,23 @@ function BoundingBox({
       width: lastBoxSize.width,
       height: lastBoxSize.height,
       class: lastSelectedClass,
+      interpolate: false,
     };
 
     newBox = clampBoxToCanvas(newBox, videoWidth, videoHeight);
     setFrameBoxes((prev) => ({
       ...prev,
       [currentFrame]: [...(frameBoxes[currentFrame] || []), newBox],
+    }));
+  };
+
+  const toggleBoxInterpolation = (index) => {
+    const updatedBoxesForFrame = [...frameBoxes[currentFrame]];
+    updatedBoxesForFrame[index].interpolate =
+      !updatedBoxesForFrame[index].interpolate;
+    setFrameBoxes((prev) => ({
+      ...prev,
+      [currentFrame]: updatedBoxesForFrame,
     }));
   };
 
@@ -539,6 +551,10 @@ function BoundingBox({
           const x = e.clientX - boundingRect.left;
           const y = e.clientY - boundingRect.top;
           createBox(x, y);
+        }
+        if (e.altKey && selected !== null) {
+          toggleBoxInterpolation(selected);
+          console.log(selected);
         }
       }}
     />

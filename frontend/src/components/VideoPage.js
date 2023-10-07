@@ -9,7 +9,7 @@ import LabelIcon from "@mui/icons-material/Label";
 import Slider from "@mui/material/Slider";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-
+import "../App.css";
 const BASE_URL = process.env.REACT_APP_BASE_URL;
 
 /* TODO 
@@ -157,14 +157,40 @@ function VideoPage() {
     }
   };
 
-  function getSliderMarks(frameBoxes) {
-    return Object.keys(frameBoxes)
-      .filter((frame) => frameBoxes[frame] && frameBoxes[frame].length > 0)
-      .map((frame) => {
-        return {
-          value: parseInt(frame, 10),
-        };
-      });
+  const toggleInterpolation = (frame, index) => {
+    const updatedBoxesForFrame = [...(frameBoxes[frame] || [])];
+    if (updatedBoxesForFrame[index]) {
+      updatedBoxesForFrame[index].interpolate =
+        !updatedBoxesForFrame[index].interpolate;
+
+      setFrameBoxes((prev) => ({
+        ...prev,
+        [frame]: updatedBoxesForFrame,
+      }));
+    }
+  };
+
+  function getSliderMarks(frameBoxes, totalFrames, maxMarks = 500) {
+    const spacing = Math.ceil(totalFrames / maxMarks);
+    let reducedFrames = [];
+
+    for (let i = 0; i < totalFrames; i += spacing) {
+      if (frameBoxes[i] && frameBoxes[i].length > 0) {
+        const hasInterpolation = frameBoxes[i].some((box) => box.interpolate);
+        reducedFrames.push({
+          frame: i,
+          interpolate: hasInterpolation,
+        });
+      }
+    }
+
+    return reducedFrames.map(({ frame, interpolate }) => ({
+      value: parseInt(frame, 10),
+      style: interpolate
+        ? { height: "5px", backgroundColor: "red" }
+        : { height: "2px" },
+      className: interpolate ? "interpolated" : "non-interpolated",
+    }));
   }
 
   return (
@@ -232,7 +258,7 @@ function VideoPage() {
                   max={data.total_frames - 1}
                   value={currentFrame}
                   onChange={(e, newValue) => updateFrame(newValue, false)}
-                  marks={getSliderMarks(frameBoxes)}
+                  marks={getSliderMarks(frameBoxes, data.total_frames)} // directly pass the result of getSliderMarks
                   sx={{
                     "& .MuiSlider-mark": {
                       height: 0.1,
@@ -324,6 +350,7 @@ function VideoPage() {
                 onDelete={handleDeleteClick}
                 boxClasses={classBoxes}
                 setBoxClasses={setClassBoxes}
+                onToggleInterpolation={toggleInterpolation}
               />
             </div>
           </div>

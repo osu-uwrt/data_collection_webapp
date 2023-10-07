@@ -16,6 +16,7 @@
   --ui-disabled: #333;
   --ui-border: #007bff;
   --ui-bg-hover: #007bff;
+  --ui-button-active: #f50057;
 }
 
 .index-page {
@@ -353,6 +354,12 @@ h3 {
   margin-left: -40%; /* Adjust this percentage to increase/decrease the gap */
 }
 
-.MuiSlider-mark {
-  height: 0;
+.video-page .slider-container #frame-slider .MuiSlider-mark.interpolated {
+  background-color: red !important;
+  height: 5px !important;
+}
+
+.video-page .slider-container #frame-slider .MuiSlider-mark.non-interpolated {
+  background-color: white !important;
+  height: 5px !important;
 }
