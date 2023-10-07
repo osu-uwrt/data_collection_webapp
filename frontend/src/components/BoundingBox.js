@@ -8,6 +8,7 @@ function BoundingBox({
   setFrameBoxes,
   onDeleteRef,
   boxClasses,
+  showLabels,
 }) {
   const canvasRef = useRef(null);
   const [dragging, setDragging] = useState(false);
@@ -461,8 +462,46 @@ function BoundingBox({
       ctx.fill();
       ctx.globalAlpha = 1;
       ctx.stroke();
+
+      if (showLabels) {
+        const label = box.class || "default";
+        ctx.font = "14px Arial";
+
+        const metrics = ctx.measureText(label);
+        const labelWidth = metrics.width + 10;
+        const labelHeight = 20;
+
+        let labelX = box.x;
+        let labelY;
+
+        // 1. Check top
+        if (box.y - labelHeight >= 0) {
+          labelY = box.y - labelHeight;
+        }
+        // 2. Check bottom
+        else if (box.y + box.height + labelHeight <= ctx.canvas.height) {
+          labelY = box.y + box.height;
+        }
+        // 3. Place label inside the box
+        else {
+          labelY = box.y;
+        }
+
+        ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+        ctx.fillRect(labelX, labelY, labelWidth, labelHeight);
+
+        ctx.fillStyle = "white";
+        ctx.shadowColor = "black";
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 1;
+        ctx.shadowBlur = 2;
+
+        ctx.fillText(label, labelX + 5, labelY + 15);
+
+        ctx.shadowColor = "transparent";
+      }
     });
-  }, [frameBoxes, boxClasses, selected, currentFrame]);
+  }, [frameBoxes, boxClasses, selected, currentFrame, showLabels]);
 
   const createBox = (x, y) => {
     let newBox = {

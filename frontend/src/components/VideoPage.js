@@ -4,7 +4,8 @@ import axios from "axios";
 import BoundingBox from "./BoundingBox";
 import LabelMenu from "./LabelMenu";
 import SaveIcon from "@mui/icons-material/Save";
-import Switch from "@mui/material/Switch";
+import RepeatIcon from "@mui/icons-material/Repeat";
+import LabelIcon from "@mui/icons-material/Label";
 import Slider from "@mui/material/Slider";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -28,6 +29,7 @@ function VideoPage() {
   const [carryBoxes, setCarryBoxes] = useState(false);
   const [loading, setLoading] = useState(true);
   const deleteRef = useRef(null);
+  const [showLabels, setShowLabels] = useState(true);
 
   // Newly added state for class colors
   const [classBoxes, setClassBoxes] = useState({
@@ -203,20 +205,33 @@ function VideoPage() {
             <div className="sidebar left-sidebar">
               <button
                 className="icon-button"
+                onClick={() => setShowLabels(!showLabels)}
+                title="Toggle Labels"
+              >
+                <LabelIcon
+                  style={{
+                    color: showLabels ? "var(--highlight-text)" : "gray",
+                  }}
+                />
+              </button>
+              <button
+                className="icon-button"
                 onClick={saveBoxes}
                 title="Save Boxes"
               >
                 <SaveIcon />
               </button>
-              <div className="carry-boxes-control">
-                <Switch
-                  checked={carryBoxes}
-                  onChange={handleCarryBoxesChange}
-                  name="carryBoxes"
-                  aria-label="Carry over boxes toggle"
+              <button
+                className="icon-button"
+                onClick={() => setCarryBoxes((prev) => !prev)}
+                title="Carry over boxes"
+              >
+                <RepeatIcon
+                  style={{
+                    color: carryBoxes ? "var(--highlight-text)" : "gray",
+                  }}
                 />
-                <label htmlFor="carryBoxes" title="Carry over boxes"></label>
-              </div>
+              </button>
             </div>
 
             <div className="main-content">
@@ -245,6 +260,7 @@ function VideoPage() {
                   onDeleteRef={deleteRef}
                   carryBoxes={carryBoxes}
                   boxClasses={classBoxes}
+                  showLabels={showLabels}
                 />
               </div>
             </div>
