@@ -162,11 +162,27 @@ function VideoPage() {
     if (updatedBoxesForFrame[index]) {
       updatedBoxesForFrame[index].interpolate =
         !updatedBoxesForFrame[index].interpolate;
+      updateInterpolationNumbers(
+        updatedBoxesForFrame,
+        updatedBoxesForFrame[index].class
+      );
 
       setFrameBoxes((prev) => ({
         ...prev,
         [frame]: updatedBoxesForFrame,
       }));
+    }
+  };
+
+  const updateInterpolationNumbers = (boxesForFrame, className) => {
+    let currentInterpolationNumber = 1;
+    for (const box of boxesForFrame) {
+      if (box.interpolate && box.class === className) {
+        box.interpolationNumber = currentInterpolationNumber;
+        currentInterpolationNumber += 1;
+      } else {
+        box.interpolationNumber = null;
+      }
     }
   };
 

@@ -156,6 +156,7 @@ function BoundingBox({
         height: 0,
         class: lastSelectedClass,
         interpolate: false,
+        interpolationNumber: null,
       };
       setFrameBoxes((prev) => ({
         ...prev,
@@ -475,7 +476,12 @@ function BoundingBox({
       ctx.stroke();
 
       if (showLabels) {
-        const label = box.class || "default";
+        let label = box.class || "default";
+
+        if (box.interpolate) {
+          label += ` (${box.interpolationNumber || "N/A"})`;
+        }
+
         ctx.font = "14px Arial";
 
         const metrics = ctx.measureText(label);
@@ -522,22 +528,13 @@ function BoundingBox({
       height: lastBoxSize.height,
       class: lastSelectedClass,
       interpolate: false,
+      interpolationNumber: null,
     };
 
     newBox = clampBoxToCanvas(newBox, videoWidth, videoHeight);
     setFrameBoxes((prev) => ({
       ...prev,
       [currentFrame]: [...(frameBoxes[currentFrame] || []), newBox],
-    }));
-  };
-
-  const toggleBoxInterpolation = (index) => {
-    const updatedBoxesForFrame = [...frameBoxes[currentFrame]];
-    updatedBoxesForFrame[index].interpolate =
-      !updatedBoxesForFrame[index].interpolate;
-    setFrameBoxes((prev) => ({
-      ...prev,
-      [currentFrame]: updatedBoxesForFrame,
     }));
   };
 
@@ -551,10 +548,6 @@ function BoundingBox({
           const x = e.clientX - boundingRect.left;
           const y = e.clientY - boundingRect.top;
           createBox(x, y);
-        }
-        if (e.altKey && selected !== null) {
-          toggleBoxInterpolation(selected);
-          console.log(selected);
         }
       }}
     />
