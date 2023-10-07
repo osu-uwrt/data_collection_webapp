@@ -21,6 +21,7 @@ function BoundingBox({
   const [creatingBox, setCreatingBox] = useState(false);
   const [initialPosition, setInitialPosition] = useState({ x: 0, y: 0 });
   const [lastSelectedClass, setLastSelectedClass] = useState("class1");
+  const [lastInterpolate, setLastInterpolate] = useState(false);
 
   const MIN_WIDTH = 10;
   const MIN_HEIGHT = 10;
@@ -159,14 +160,15 @@ function BoundingBox({
         width: 0,
         height: 0,
         class: lastSelectedClass,
-        interpolate: false,
+        interpolate: lastInterpolate,
         interpolationNumber: null,
       };
       setFrameBoxes((prev) => ({
         ...prev,
         [currentFrame]: [...(frameBoxes[currentFrame] || []), newBox],
       }));
-      setDragData({ boxIndex: frameBoxes[currentFrame]?.length || 0 }); // Assuming boxIndex is set to the last box in the array
+      setDragData({ boxIndex: frameBoxes[currentFrame]?.length || 0 });
+      updateInterpolationNumbers(frameBoxes[currentFrame]);
       return;
     }
     if (!frameBoxes[currentFrame]) return;
@@ -182,6 +184,8 @@ function BoundingBox({
           width: frameBoxes[currentFrame][i].width,
           height: frameBoxes[currentFrame][i].height,
         });
+        setLastSelectedClass(frameBoxes[currentFrame][i].class);
+        setLastInterpolate(frameBoxes[currentFrame][i].interpolate);
         if (corner) {
           setDragData({ boxIndex: i, corner });
           break;
@@ -559,6 +563,8 @@ function BoundingBox({
         width: normalizedBox.width,
         height: normalizedBox.height,
       });
+      setLastSelectedClass(normalizedBox.class);
+      setLastInterpolate(normalizedBox.interpolate);
 
       const updatedBoxesForFrame = [...frameBoxes[currentFrame]];
       updatedBoxesForFrame[dragData.boxIndex] = normalizedBox;
@@ -585,6 +591,10 @@ function BoundingBox({
         width: frameBoxes[currentFrame][dragData.boxIndex].width,
         height: frameBoxes[currentFrame][dragData.boxIndex].height,
       });
+      setLastSelectedClass(frameBoxes[currentFrame][dragData.boxIndex].class);
+      setLastInterpolate(
+        frameBoxes[currentFrame][dragData.boxIndex].interpolate
+      );
       setDragging(false);
 
       const normalizedBox = normalizeBox(
@@ -716,15 +726,19 @@ function BoundingBox({
       width: lastBoxSize.width,
       height: lastBoxSize.height,
       class: lastSelectedClass,
-      interpolate: false,
+      interpolate: lastInterpolate,
       interpolationNumber: null,
     };
 
     newBox = clampBoxToCanvas(newBox, videoWidth, videoHeight);
-    setFrameBoxes((prev) => ({
-      ...prev,
-      [currentFrame]: [...(frameBoxes[currentFrame] || []), newBox],
-    }));
+    setFrameBoxes((prev) => {
+      const updatedFrameBoxes = {
+        ...prev,
+        [currentFrame]: [...(frameBoxes[currentFrame] || []), newBox],
+      };
+      updateInterpolationNumbers(updatedFrameBoxes[currentFrame]);
+      return updatedFrameBoxes;
+    });
   };
 
   return (
