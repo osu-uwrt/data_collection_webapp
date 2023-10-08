@@ -1,9 +1,18 @@
 export const updateInterpolationNumbers = (boxesForFrame) => {
-  const uniqueClasses = [...new Set(boxesForFrame.map((box) => box.class))];
+  // Sort the boxes by class name, then by interpolationNumber
+  boxesForFrame.sort((a, b) => {
+    if (a.class < b.class) return -1;
+    if (a.class > b.class) return 1;
+    if (a.interpolate && b.interpolate) {
+      return a.interpolationNumber - b.interpolationNumber;
+    }
+    return a.interpolate ? -1 : 1;
+  });
 
+  // Assign interpolationNumber as before
+  const uniqueClasses = [...new Set(boxesForFrame.map((box) => box.class))];
   uniqueClasses.forEach((className) => {
     let currentInterpolationNumber = 1;
-
     for (const box of boxesForFrame) {
       if (box.interpolate && box.class === className) {
         box.interpolationNumber = currentInterpolationNumber;
@@ -12,5 +21,10 @@ export const updateInterpolationNumbers = (boxesForFrame) => {
         box.interpolationNumber = null;
       }
     }
+  });
+
+  // Assign unique interpolationID based on order
+  boxesForFrame.forEach((box, index) => {
+    box.interpolationID = index + 1;
   });
 };

@@ -162,7 +162,13 @@ function BoundingBox({
         class: lastSelectedClass,
         interpolate: lastInterpolate,
         interpolationNumber: null,
+        interpolationID: null,
+        displayOrder: null,
       };
+      const currentBoxes = frameBoxes[currentFrame] || [];
+      const highestOrder =
+        Math.max(-1, ...currentBoxes.map((b) => b.displayOrder)) + 1;
+      newBox.displayOrder = highestOrder;
       setFrameBoxes((prev) => ({
         ...prev,
         [currentFrame]: [...(frameBoxes[currentFrame] || []), newBox],
@@ -352,6 +358,7 @@ function BoundingBox({
       frameBoxes[frame].forEach((box) => {
         box.interpolate = false;
         box.interpolationNumber = null;
+        box.interpolationID = null;
       });
     }
   };
@@ -498,6 +505,8 @@ function BoundingBox({
                 class: startBox.class,
                 interpolate: false,
                 interpolationNumber: null,
+                interpolationID: null,
+                displayOrder: null,
               };
 
               const correctIndex = frameBoxes[j].findIndex(
@@ -628,7 +637,12 @@ function BoundingBox({
   useEffect(() => {
     const ctx = canvasRef.current.getContext("2d");
     ctx.clearRect(0, 0, videoWidth, videoHeight);
-    (frameBoxes[currentFrame] || []).forEach((box, index) => {
+
+    const sortedBoxes = (frameBoxes[currentFrame] || []).sort(
+      (a, b) => a.displayOrder - b.displayOrder
+    );
+
+    sortedBoxes.forEach((box, index) => {
       const boxClass = box.class || "default";
       const { strokeColor, fillColor } = boxClasses[boxClass] || {};
 
@@ -683,7 +697,9 @@ function BoundingBox({
         let label = box.class || "default";
 
         if (box.interpolate) {
-          label += ` (${box.interpolationNumber || "N/A"})`;
+          label += ` (${box.interpolationNumber || "N/A"}) (${
+            box.interpolationID || "N/A"
+          })`;
         }
 
         ctx.font = "14px Arial";
@@ -728,7 +744,14 @@ function BoundingBox({
       class: lastSelectedClass,
       interpolate: lastInterpolate,
       interpolationNumber: null,
+      interpolationID: null,
+      displayOrder: null,
     };
+
+    const currentBoxes = frameBoxes[currentFrame] || [];
+    const highestOrder =
+      Math.max(-1, ...currentBoxes.map((b) => b.displayOrder)) + 1;
+    newBox.displayOrder = highestOrder;
 
     newBox = clampBoxToCanvas(newBox, videoWidth, videoHeight);
     setFrameBoxes((prev) => {
