@@ -1,4 +1,10 @@
 export const updateInterpolationNumbers = (boxesForFrame) => {
+  if (!boxesForFrame) {
+    console.warn(
+      "updateInterpolationNumbers received undefined boxesForFrame."
+    );
+    return;
+  }
   const interpolationBoxes = boxesForFrame
     .filter((box) => box.interpolate)
     .sort((a, b) => {

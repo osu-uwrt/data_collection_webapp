@@ -44,7 +44,9 @@ function BoundingBox({
         ...prev,
         [currentFrame]: updatedBoxesForFrame,
       }));
-      updateInterpolationNumbers(updatedBoxesForFrame);
+      if (frameBoxes[currentFrame]) {
+        updateInterpolationNumbers(frameBoxes[currentFrame]);
+      }
       setSelected(null);
       setDragging(false);
       setDragData({ boxIndex: null, corner: null });
@@ -176,6 +178,7 @@ function BoundingBox({
           interpolationID: null,
           displayOrder: null,
         };
+
         const currentBoxes = frameBoxes[currentFrame] || [];
         const highestOrder =
           Math.max(-1, ...currentBoxes.map((b) => b.displayOrder)) + 1;
@@ -185,7 +188,10 @@ function BoundingBox({
           [currentFrame]: [...(frameBoxes[currentFrame] || []), newBox],
         }));
         setDragData({ boxIndex: frameBoxes[currentFrame]?.length || 0 });
-        updateInterpolationNumbers(frameBoxes[currentFrame]);
+        if (frameBoxes[currentFrame]) {
+          updateInterpolationNumbers(frameBoxes[currentFrame]);
+        }
+
         return;
       }
       if (!frameBoxes[currentFrame]) return;
@@ -733,7 +739,9 @@ function BoundingBox({
         ...prev,
         [currentFrame]: [...(frameBoxes[currentFrame] || []), newBox],
       };
-      updateInterpolationNumbers(updatedFrameBoxes[currentFrame]);
+      if (frameBoxes[currentFrame]) {
+        updateInterpolationNumbers(frameBoxes[currentFrame]);
+      }
       return updatedFrameBoxes;
     });
   };

@@ -102,6 +102,7 @@ function VideoPage() {
       }
 
       setFrameBoxes(boxesData);
+      console.log(boxesData);
     } catch (error) {
       console.error("Failed to fetch boxes data:", error);
     }
