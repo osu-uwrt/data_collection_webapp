@@ -2,7 +2,7 @@ import sqlite3
 import os
 
 def create_tables():
-    db_dir = os.path.join(os.getcwd(), "data/db")
+    db_dir = os.path.join(os.getcwd(), "backend/data/db")
     if not os.path.exists(db_dir):
         os.makedirs(db_dir)
     

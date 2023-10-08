@@ -602,6 +602,12 @@ function BoundingBox({
   };
 
   useEffect(() => {
+    if (frameBoxes[currentFrame]) {
+      updateInterpolationNumbers(frameBoxes[currentFrame]);
+    }
+  }, [frameBoxes[currentFrame]]);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     canvas.addEventListener("mousedown", handleMouseDown);
     canvas.addEventListener("mousemove", handleMouseMove);
@@ -739,11 +745,13 @@ function BoundingBox({
         ...prev,
         [currentFrame]: [...(frameBoxes[currentFrame] || []), newBox],
       };
-      if (frameBoxes[currentFrame]) {
-        updateInterpolationNumbers(frameBoxes[currentFrame]);
-      }
+
       return updatedFrameBoxes;
     });
+
+    if (frameBoxes[currentFrame]) {
+      updateInterpolationNumbers(frameBoxes[currentFrame]);
+    }
   };
 
   return (
