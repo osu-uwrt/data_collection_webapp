@@ -93,7 +93,15 @@ function VideoPage() {
       const boxesResponse = await axios.get(
         `${BASE_URL}/data/frames/${videoName}/boxes.json`
       );
-      setFrameBoxes(boxesResponse.data.boxes || {});
+      const boxesData = boxesResponse.data.boxes || {};
+
+      for (let frame = 0; frame < data.total_frames; frame++) {
+        if (!boxesData[frame]) {
+          boxesData[frame] = [];
+        }
+      }
+
+      setFrameBoxes(boxesData);
     } catch (error) {
       console.error("Failed to fetch boxes data:", error);
     }
