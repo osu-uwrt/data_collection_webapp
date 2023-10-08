@@ -31,6 +31,7 @@ function BoundingBox({
   const [lastInterpolate, setLastInterpolate] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("error");
 
   const MIN_WIDTH = 10;
   const MIN_HEIGHT = 10;
@@ -396,6 +397,7 @@ function BoundingBox({
       setSnackbarMessage(
         "Interpolation failed: Less than 2 frames have boxes flagged for interpolation."
       );
+      setSnackbarSeverity("error");
       setSnackbarOpen(true);
       return false;
     }
@@ -413,6 +415,7 @@ function BoundingBox({
         setSnackbarMessage(
           `Interpolation failed: Inconsistent number of boxes flagged for interpolation. Found ${referenceBoxes.length} on frame ${referenceFrame} and ${currentBoxes.length} on frame ${frame}.`
         );
+        setSnackbarSeverity("error");
         setSnackbarOpen(true);
         return false;
       }
@@ -422,6 +425,7 @@ function BoundingBox({
           setSnackbarMessage(
             `Interpolation failed: Mismatch in classes of boxes flagged for interpolation between frame ${referenceFrame} and frame ${frame}.`
           );
+          setSnackbarSeverity("error");
           setSnackbarOpen(true);
           return false;
         }
@@ -431,6 +435,7 @@ function BoundingBox({
         setSnackbarMessage(
           `Interpolation failed: Inconsistent details between boxes of frame ${referenceFrame} and frame ${frame}.`
         );
+        setSnackbarSeverity("error");
         setSnackbarOpen(true);
         return false;
       }
@@ -505,9 +510,12 @@ function BoundingBox({
   useEffect(() => {
     if (runInterpolation) {
       if (validateInterpolation(frameBoxes)) {
-        console.log("Interpolation Validated");
         performInterpolation(frameBoxes);
         resetInterpolationFlags(frameBoxes);
+
+        setSnackbarMessage(`Interpolation successful!`);
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
       } else {
         console.log("Invalid Interpolation");
       }
@@ -759,8 +767,9 @@ function BoundingBox({
       >
         <Alert
           onClose={() => setSnackbarOpen(false)}
-          severity="error"
+          severity={snackbarSeverity}
           sx={{ width: "100%" }}
+          variant="filled"
         >
           {snackbarMessage}
         </Alert>
