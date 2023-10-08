@@ -485,7 +485,7 @@ function BoundingBox({
                 class: startBox.class,
                 interpolate: false,
                 interpolationNumber: null,
-                interpolationID: startBox.interpolationID, // Use the interpolationID of the startBox
+                interpolationID: startBox.interpolationID,
                 displayOrder: null,
               };
 

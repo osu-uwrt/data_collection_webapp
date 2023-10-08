@@ -21,6 +21,8 @@ function TransitionRight(props) {
 }
 
 const BASE_URL = process.env.REACT_APP_BASE_URL;
+const MAX_VIDEO_WIDTH = 840; // Example values; adjust as required
+const MAX_VIDEO_HEIGHT = 800;
 
 /* TODO 
 FIX HEADER SIZE TO SAME SIZE AS VIDEO ON SMALL RESIZE
@@ -45,6 +47,40 @@ function VideoPage() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // can be 'error', 'info', 'warning', 'success'
+
+  const scaleX = Math.min(MAX_VIDEO_WIDTH / data.video_width, 1);
+  const scaleY = Math.min(MAX_VIDEO_HEIGHT / data.video_height, 1);
+  const scale = Math.min(scaleX, scaleY);
+
+  const scaleBoxesForSave = (boxes, scale) => {
+    const scaledBoxes = { ...boxes };
+    for (let frame in scaledBoxes) {
+      scaledBoxes[frame] = scaledBoxes[frame].map((box) => ({
+        ...box,
+        x: box.x / scale, // Divide by scale
+        y: box.y / scale,
+        width: box.width / scale,
+        height: box.height / scale,
+      }));
+    }
+    return scaledBoxes;
+  };
+
+  const scaleBoxesOnLoad = (boxes, scale) => {
+    console.log("scaleX:", scaleX, "scaleY:", scaleY, "scale:", scale);
+
+    const scaledBoxes = { ...boxes };
+    for (let frame in scaledBoxes) {
+      scaledBoxes[frame] = scaledBoxes[frame].map((box) => ({
+        ...box,
+        x: box.x * scale, // Multiply by scale
+        y: box.y * scale,
+        width: box.width * scale,
+        height: box.height * scale,
+      }));
+    }
+    return scaledBoxes;
+  };
 
   const handleSnackbarClose = (event, reason) => {
     if (reason === "clickaway") {
@@ -83,34 +119,38 @@ function VideoPage() {
     try {
       const videoResponse = await axios.get(`${BASE_URL}/video/${videoName}`);
       setData(videoResponse.data);
+
+      // Calculate scale values after fetching video data
+      const localScaleX = Math.min(
+        MAX_VIDEO_WIDTH / videoResponse.data.video_width,
+        1
+      );
+      const localScaleY = Math.min(
+        MAX_VIDEO_HEIGHT / videoResponse.data.video_height,
+        1
+      );
+      const localScale = Math.min(localScaleX, localScaleY);
+
+      // Fetching and scaling boxes
+      try {
+        const boxesResponse = await axios.get(
+          `${BASE_URL}/data/frames/${videoName}/boxes.json`
+        );
+        let boxesData = boxesResponse.data.boxes || {};
+        console.log("Loading unscaled", boxesData);
+        boxesData = scaleBoxesOnLoad(boxesData, localScale); // Use local scale here
+        console.log("Loading scaled", boxesData);
+        setFrameBoxes(boxesData);
+      } catch (error) {
+        console.error("Failed to fetch boxes data:", error);
+      }
     } catch (error) {
       console.error("Failed to fetch video data:", error);
     }
   };
 
-  const fetchBoxesData = async () => {
-    try {
-      const boxesResponse = await axios.get(
-        `${BASE_URL}/data/frames/${videoName}/boxes.json`
-      );
-      const boxesData = boxesResponse.data.boxes || {};
-
-      for (let frame = 0; frame < data.total_frames; frame++) {
-        if (!boxesData[frame]) {
-          boxesData[frame] = [];
-        }
-      }
-
-      setFrameBoxes(boxesData);
-      console.log(boxesData);
-    } catch (error) {
-      console.error("Failed to fetch boxes data:", error);
-    }
-  };
-
   const fetchData = async () => {
     await fetchVideoData();
-    await fetchBoxesData();
     setLoading(false);
   };
 
@@ -158,16 +198,19 @@ function VideoPage() {
   };
 
   const saveBoxes = async () => {
+    const boxesToSave = scaleBoxesForSave(frameBoxes, scale);
+
     const payload = {
       video_name: videoName,
-      boxes: frameBoxes,
+      boxes: boxesToSave,
     };
     try {
-      const response = await axios.post(`${BASE_URL}/save-boxes`, payload, {
+      await axios.post(`${BASE_URL}/save-boxes`, payload, {
         headers: {
           "Content-Type": "application/json",
         },
       });
+      console.log("Saving", payload.boxes);
       showSnackbar("Boxes saved successfully!", "success");
     } catch (error) {
       console.error("Failed to save boxes:", error);
@@ -224,7 +267,7 @@ function VideoPage() {
     }
   };
 
-  function getSliderMarks(frameBoxes, totalFrames, maxMarks = 500) {
+  function getSliderMarks(frameBoxes, totalFrames, maxMarks = 10000) {
     const spacing = Math.ceil(totalFrames / maxMarks);
     let reducedFrames = [];
 
@@ -396,8 +439,8 @@ function VideoPage() {
                 className="frame-container"
                 style={{
                   position: "relative",
-                  width: `${data.video_width}px`,
-                  height: `${data.video_height}px`,
+                  width: `${data.video_width * scale}px`,
+                  height: `${data.video_height * scale}px`,
                   overflow: "hidden",
                 }}
               >
@@ -406,10 +449,14 @@ function VideoPage() {
                   className="videoFrame"
                   src={`${BASE_URL}/data/frames/${data.video_name}/frame${currentFrame}.jpg`}
                   alt="Current frame"
+                  style={{
+                    width: `${data.video_width * scale}px`, // Adjusted width
+                    height: `${data.video_height * scale}px`, // Adjusted height
+                  }}
                 />
                 <BoundingBox
-                  videoWidth={data.video_width}
-                  videoHeight={data.video_height}
+                  videoWidth={data.video_width * scale}
+                  videoHeight={data.video_height * scale}
                   currentFrame={currentFrame}
                   frameBoxes={frameBoxes}
                   setFrameBoxes={setFrameBoxes}
