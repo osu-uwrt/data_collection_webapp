@@ -1,5 +1,12 @@
 import React, { useRef, useEffect, useState } from "react";
 import { updateInterpolationNumbers } from "./utils";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
+import Slide from "@mui/material/Slide";
+
+function TransitionRight(props) {
+  return <Slide {...props} direction="right" />;
+}
 
 function BoundingBox({
   videoWidth,
@@ -22,6 +29,8 @@ function BoundingBox({
   const [initialPosition, setInitialPosition] = useState({ x: 0, y: 0 });
   const [lastSelectedClass, setLastSelectedClass] = useState("class1");
   const [lastInterpolate, setLastInterpolate] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
 
   const MIN_WIDTH = 10;
   const MIN_HEIGHT = 10;
@@ -367,8 +376,6 @@ function BoundingBox({
     let activeInterpolationFrames = [];
     let activeInterpolationSignatures = {};
 
-    console.log("Starting validateInterpolation...");
-
     for (let frame in frameBoxes) {
       const boxes = frameBoxes[frame].filter((box) => box.interpolate);
       if (boxes.length > 0) {
@@ -385,30 +392,50 @@ function BoundingBox({
       }
     }
 
-    console.log("Active interpolation frames:", activeInterpolationFrames);
-    console.log(
-      "Active interpolation signatures by frame:",
-      activeInterpolationSignatures
-    );
-
     if (activeInterpolationFrames.length < 2) {
-      console.log("Less than 2 active interpolation frames. Exiting...");
+      setSnackbarMessage(
+        "Interpolation failed: Less than 2 frames have boxes flagged for interpolation."
+      );
+      setSnackbarOpen(true);
       return false;
     }
 
-    let referenceSignature =
-      activeInterpolationSignatures[activeInterpolationFrames[0]];
+    let referenceFrame = activeInterpolationFrames[0];
+    let referenceSignature = activeInterpolationSignatures[referenceFrame];
+    let referenceBoxes = frameBoxes[referenceFrame].filter(
+      (box) => box.interpolate
+    );
 
     for (let frame of activeInterpolationFrames.slice(1)) {
-      if (activeInterpolationSignatures[frame] !== referenceSignature) {
-        console.log(
-          `Inconsistent signatures between frames. Expected: ${referenceSignature}, Found: ${activeInterpolationSignatures[frame]}`
+      const currentBoxes = frameBoxes[frame].filter((box) => box.interpolate);
+
+      if (referenceBoxes.length !== currentBoxes.length) {
+        setSnackbarMessage(
+          `Interpolation failed: Inconsistent number of boxes flagged for interpolation. Found ${referenceBoxes.length} on frame ${referenceFrame} and ${currentBoxes.length} on frame ${frame}.`
         );
+        setSnackbarOpen(true);
+        return false;
+      }
+
+      for (let i = 0; i < referenceBoxes.length; i++) {
+        if (referenceBoxes[i].class !== currentBoxes[i].class) {
+          setSnackbarMessage(
+            `Interpolation failed: Mismatch in classes of boxes flagged for interpolation between frame ${referenceFrame} and frame ${frame}.`
+          );
+          setSnackbarOpen(true);
+          return false;
+        }
+      }
+
+      if (activeInterpolationSignatures[frame] !== referenceSignature) {
+        setSnackbarMessage(
+          `Interpolation failed: Inconsistent details between boxes of frame ${referenceFrame} and frame ${frame}.`
+        );
+        setSnackbarOpen(true);
         return false;
       }
     }
 
-    console.log("Validation passed.");
     return true;
   };
 
@@ -710,18 +737,35 @@ function BoundingBox({
   };
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{ position: "absolute", top: 0, left: 0 }}
-      onClick={(e) => {
-        if (e.shiftKey) {
-          const boundingRect = canvasRef.current.getBoundingClientRect();
-          const x = e.clientX - boundingRect.left;
-          const y = e.clientY - boundingRect.top;
-          createBox(x, y);
-        }
-      }}
-    />
+    <>
+      <canvas
+        ref={canvasRef}
+        style={{ position: "absolute", top: 0, left: 0 }}
+        onClick={(e) => {
+          if (e.shiftKey) {
+            const boundingRect = canvasRef.current.getBoundingClientRect();
+            const x = e.clientX - boundingRect.left;
+            const y = e.clientY - boundingRect.top;
+            createBox(x, y);
+          }
+        }}
+      />
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        TransitionComponent={TransitionRight}
+      >
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+    </>
   );
 }
 

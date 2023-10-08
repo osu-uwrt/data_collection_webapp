@@ -35,10 +35,7 @@ const LabelMenu = ({
     onToggleInterpolation(currentFrame, index);
   };
 
-  // Sort boxes by displayOrder before mapping
-  const boxesForCurrentFrame = (boundingBoxes[currentFrame] || []).sort(
-    (a, b) => a.displayOrder - b.displayOrder
-  );
+  const boxesForCurrentFrame = boundingBoxes[currentFrame] || [];
 
   return (
     <div className="label-menu">

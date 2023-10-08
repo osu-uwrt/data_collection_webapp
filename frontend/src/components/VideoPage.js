@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import BoundingBox from "./BoundingBox";
 import LabelMenu from "./LabelMenu";
+import Snackbar from "@mui/material/Snackbar";
 import SaveIcon from "@mui/icons-material/Save";
 import RepeatIcon from "@mui/icons-material/Repeat";
 import LabelIcon from "@mui/icons-material/Label";
@@ -12,7 +13,11 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import LineStyleIcon from "@mui/icons-material/LineStyle";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { updateInterpolationNumbers } from "./utils";
+import Slide from "@mui/material/Slide";
 
+function TransitionRight(props) {
+  return <Slide {...props} direction="right" />;
+}
 const BASE_URL = process.env.REACT_APP_BASE_URL;
 
 /* TODO 
@@ -35,6 +40,20 @@ function VideoPage() {
   const deleteRef = useRef(null);
   const [showLabels, setShowLabels] = useState(true);
   const [runInterpolation, setRunInterpolation] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
+
+  const showSnackbar = (message) => {
+    setSnackbarMessage(message);
+    setSnackbarOpen(true);
+  };
 
   // Newly added state for class colors
   const [classBoxes, setClassBoxes] = useState({
@@ -104,6 +123,7 @@ function VideoPage() {
   const handleDeleteAllBoxes = () => {
     if (window.confirm("Are you sure you want to delete all boxes?")) {
       setFrameBoxes({});
+      showSnackbar("All boxes deleted successfully!"); // Updated line
     }
   };
 
@@ -129,17 +149,16 @@ function VideoPage() {
       video_name: videoName,
       boxes: frameBoxes,
     };
-
     try {
       const response = await axios.post(`${BASE_URL}/save-boxes`, payload, {
         headers: {
           "Content-Type": "application/json",
         },
       });
-      alert("Boxes saved successfully!");
+      showSnackbar("Boxes saved successfully!"); // Updated line
     } catch (error) {
       console.error("Failed to save boxes:", error);
-      alert("Failed to save boxes. Please try again.");
+      showSnackbar("Failed to save boxes. Please try again."); // Updated line
     }
   };
 
@@ -416,6 +435,17 @@ function VideoPage() {
           </div>
         </>
       )}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        ContentProps={{
+          "aria-describedby": "message-id",
+          style: { backgroundColor: "red", color: "white" }, // Optional styles for error messages
+        }}
+        message={<span id="message-id">{snackbarMessage}</span>}
+        TransitionComponent={TransitionRight}
+      />
     </div>
   );
 }
