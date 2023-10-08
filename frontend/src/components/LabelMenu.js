@@ -44,8 +44,8 @@ const LabelMenu = ({
       <List>
         {boxesForCurrentFrame.map((box, index) => (
           <ListItem key={index} dense divider className="label-menu-item">
-            {box.interpolationID && (
-              <div className="interpolation-id">{box.interpolationID}</div>
+            {box.interpolationNumber && (
+              <div className="interpolation-id">{box.interpolationNumber}</div>
             )}
             <div
               style={{

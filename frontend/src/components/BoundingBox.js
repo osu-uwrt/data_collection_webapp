@@ -671,7 +671,7 @@ function BoundingBox({
         let label = box.class || "default";
 
         if (box.interpolate) {
-          label += ` (${box.interpolationID || "N/A"})`;
+          label += ` (${box.interpolationNumber || "N/A"})`;
         }
 
         ctx.font = "14px Arial";
