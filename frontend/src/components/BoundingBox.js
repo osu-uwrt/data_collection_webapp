@@ -404,24 +404,24 @@ function BoundingBox({
 
     let referenceFrame = activeInterpolationFrames[0];
     let referenceSignature = activeInterpolationSignatures[referenceFrame];
-    let referenceBoxes = frameBoxes[referenceFrame].filter(
-      (box) => box.interpolate
-    );
+    let referenceSignaturesSet = new Set(referenceSignature.split(","));
 
     for (let frame of activeInterpolationFrames.slice(1)) {
-      const currentBoxes = frameBoxes[frame].filter((box) => box.interpolate);
+      const currentBoxesSignature =
+        activeInterpolationSignatures[frame].split(",");
+      const currentSignatureSet = new Set(currentBoxesSignature);
 
-      if (referenceBoxes.length !== currentBoxes.length) {
+      if (referenceSignaturesSet.size !== currentSignatureSet.size) {
         setSnackbarMessage(
-          `Interpolation failed: Inconsistent number of boxes flagged for interpolation. Found ${referenceBoxes.length} on frame ${referenceFrame} and ${currentBoxes.length} on frame ${frame}.`
+          `Interpolation failed: Inconsistent number of boxes flagged for interpolation. Found ${referenceSignaturesSet.size} on frame ${referenceFrame} and ${currentSignatureSet.size} on frame ${frame}.`
         );
         setSnackbarSeverity("error");
         setSnackbarOpen(true);
         return false;
       }
 
-      for (let i = 0; i < referenceBoxes.length; i++) {
-        if (referenceBoxes[i].class !== currentBoxes[i].class) {
+      for (let signature of referenceSignaturesSet) {
+        if (!currentSignatureSet.has(signature)) {
           setSnackbarMessage(
             `Interpolation failed: Mismatch in classes of boxes flagged for interpolation between frame ${referenceFrame} and frame ${frame}.`
           );
@@ -429,15 +429,6 @@ function BoundingBox({
           setSnackbarOpen(true);
           return false;
         }
-      }
-
-      if (activeInterpolationSignatures[frame] !== referenceSignature) {
-        setSnackbarMessage(
-          `Interpolation failed: Inconsistent details between boxes of frame ${referenceFrame} and frame ${frame}.`
-        );
-        setSnackbarSeverity("error");
-        setSnackbarOpen(true);
-        return false;
       }
     }
 
@@ -727,6 +718,8 @@ function BoundingBox({
       interpolationID: null,
       displayOrder: null,
     };
+
+    newBox = normalizeBox(newBox);
 
     const currentBoxes = frameBoxes[currentFrame] || [];
     const highestOrder =
