@@ -14,10 +14,12 @@ import LineStyleIcon from "@mui/icons-material/LineStyle";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { updateInterpolationNumbers } from "./utils";
 import Slide from "@mui/material/Slide";
+import Alert from "@mui/material/Alert";
 
 function TransitionRight(props) {
   return <Slide {...props} direction="right" />;
 }
+
 const BASE_URL = process.env.REACT_APP_BASE_URL;
 
 /* TODO 
@@ -42,6 +44,7 @@ function VideoPage() {
   const [runInterpolation, setRunInterpolation] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // can be 'error', 'info', 'warning', 'success'
 
   const handleSnackbarClose = (event, reason) => {
     if (reason === "clickaway") {
@@ -50,8 +53,9 @@ function VideoPage() {
     setSnackbarOpen(false);
   };
 
-  const showSnackbar = (message) => {
+  const showSnackbar = (message, severity = "success") => {
     setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
     setSnackbarOpen(true);
   };
 
@@ -155,10 +159,10 @@ function VideoPage() {
           "Content-Type": "application/json",
         },
       });
-      showSnackbar("Boxes saved successfully!"); // Updated line
+      showSnackbar("Boxes saved successfully!", "success");
     } catch (error) {
       console.error("Failed to save boxes:", error);
-      showSnackbar("Failed to save boxes. Please try again."); // Updated line
+      showSnackbar("Failed to save boxes. Please try again.", "error");
     }
   };
 
@@ -439,13 +443,17 @@ function VideoPage() {
         open={snackbarOpen}
         autoHideDuration={6000}
         onClose={handleSnackbarClose}
-        ContentProps={{
-          "aria-describedby": "message-id",
-          style: { backgroundColor: "red", color: "white" }, // Optional styles for error messages
-        }}
-        message={<span id="message-id">{snackbarMessage}</span>}
         TransitionComponent={TransitionRight}
-      />
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          variant="filled"
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }
