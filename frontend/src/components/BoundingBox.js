@@ -363,26 +363,9 @@ function BoundingBox({
     }
   };
 
-  const removeDuplicateBoxes = (frameBoxes) => {
-    for (let frame in frameBoxes) {
-      let uniqueBoxes = [];
-      let seenBoxStrings = new Set();
-
-      frameBoxes[frame].forEach((box) => {
-        const boxString = JSON.stringify(box);
-        if (!seenBoxStrings.has(boxString)) {
-          seenBoxStrings.add(boxString);
-          uniqueBoxes.push(box);
-        }
-      });
-
-      frameBoxes[frame] = uniqueBoxes;
-    }
-  };
-
   const validateInterpolation = (frameBoxes) => {
     let activeInterpolationFrames = [];
-    let activeInterpolationCounts = {};
+    let activeInterpolationSignatures = {};
 
     console.log("Starting validateInterpolation...");
 
@@ -390,19 +373,22 @@ function BoundingBox({
       const boxes = frameBoxes[frame].filter((box) => box.interpolate);
       if (boxes.length > 0) {
         activeInterpolationFrames.push(frame);
-        let frameBoxCounts = {};
-        boxes.forEach((box) => {
-          const className = box.class;
-          frameBoxCounts[className] = (frameBoxCounts[className] || 0) + 1;
-        });
-        activeInterpolationCounts[frame] = frameBoxCounts;
+
+        let frameSignature = boxes
+          .map((box) => {
+            return `${box.class}_${box.interpolationNumber}_${box.interpolationID}`;
+          })
+          .sort()
+          .join(",");
+
+        activeInterpolationSignatures[frame] = frameSignature;
       }
     }
 
     console.log("Active interpolation frames:", activeInterpolationFrames);
     console.log(
-      "Active interpolation counts by frame:",
-      activeInterpolationCounts
+      "Active interpolation signatures by frame:",
+      activeInterpolationSignatures
     );
 
     if (activeInterpolationFrames.length < 2) {
@@ -410,60 +396,20 @@ function BoundingBox({
       return false;
     }
 
-    let referenceFrameCounts =
-      activeInterpolationCounts[activeInterpolationFrames[0]];
+    let referenceSignature =
+      activeInterpolationSignatures[activeInterpolationFrames[0]];
+
     for (let frame of activeInterpolationFrames.slice(1)) {
-      let currentFrameCounts = activeInterpolationCounts[frame];
-
-      console.log(`Frame ${frame} counts:`, currentFrameCounts);
-
-      for (let className in referenceFrameCounts) {
-        if (currentFrameCounts[className] !== referenceFrameCounts[className]) {
-          console.log(
-            `Inconsistent counts for class ${className}. Expected: ${referenceFrameCounts[className]}, Found: ${currentFrameCounts[className]}`
-          );
-          return false;
-        }
+      if (activeInterpolationSignatures[frame] !== referenceSignature) {
+        console.log(
+          `Inconsistent signatures between frames. Expected: ${referenceSignature}, Found: ${activeInterpolationSignatures[frame]}`
+        );
+        return false;
       }
     }
 
     console.log("Validation passed.");
     return true;
-  };
-
-  const reindexBoxes = (frameBoxes) => {
-    let referenceFrame = null;
-    for (let frame in frameBoxes) {
-      if (frameBoxes[frame].some((box) => box.interpolate)) {
-        referenceFrame = frame;
-        break;
-      }
-    }
-
-    if (!referenceFrame) return;
-
-    let referenceOrder = frameBoxes[referenceFrame].map((box) => box.class);
-
-    console.log("Reference frame:", referenceFrame);
-    console.log("Reference order:", referenceOrder);
-
-    for (let frame in frameBoxes) {
-      let sortedBoxes = [];
-
-      referenceOrder.forEach((refClass) => {
-        let boxesWithRefClass = frameBoxes[frame].filter(
-          (box) => box.class === refClass
-        );
-        sortedBoxes = sortedBoxes.concat(boxesWithRefClass);
-      });
-
-      frameBoxes[frame] = sortedBoxes;
-
-      console.log(
-        `Boxes in frame ${frame} after reindexing:`,
-        frameBoxes[frame]
-      );
-    }
   };
 
   const performInterpolation = (frameBoxes) => {
@@ -478,13 +424,15 @@ function BoundingBox({
         } else {
           const endFrame = frame;
 
-          frameBoxes[startFrame].forEach((startBox, startBoxIndex) => {
+          frameBoxes[startFrame].forEach((startBox) => {
             if (!startBox.interpolate) {
               return;
             }
 
             const endBox = frameBoxes[endFrame].find(
-              (box) => box.class === startBox.class && box.interpolate
+              (box) =>
+                box.interpolationID === startBox.interpolationID &&
+                box.interpolate
             );
 
             if (!endBox) {
@@ -505,12 +453,12 @@ function BoundingBox({
                 class: startBox.class,
                 interpolate: false,
                 interpolationNumber: null,
-                interpolationID: null,
+                interpolationID: startBox.interpolationID, // Use the interpolationID of the startBox
                 displayOrder: null,
               };
 
               const correctIndex = frameBoxes[j].findIndex(
-                (box) => box.class === interpolatedBox.class
+                (box) => box.interpolationID === interpolatedBox.interpolationID
               );
 
               if (correctIndex === -1) {
@@ -531,9 +479,6 @@ function BoundingBox({
     if (runInterpolation) {
       if (validateInterpolation(frameBoxes)) {
         console.log("Interpolation Validated");
-        reindexBoxes(frameBoxes);
-        removeDuplicateBoxes(frameBoxes);
-        console.log("boxes reindexed");
         performInterpolation(frameBoxes);
         resetInterpolationFlags(frameBoxes);
       } else {
@@ -644,7 +589,7 @@ function BoundingBox({
 
     sortedBoxes.forEach((box, index) => {
       const boxClass = box.class || "default";
-      const { strokeColor, fillColor } = boxClasses[boxClass] || {};
+      const { strokeColor } = boxClasses[boxClass] || {};
 
       const isBoxSelected = index === selected;
 
