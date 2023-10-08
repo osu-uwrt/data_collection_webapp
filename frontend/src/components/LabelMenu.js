@@ -1,7 +1,6 @@
 import React from "react";
 import { List, ListItem, Select, MenuItem, Typography } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import CircleIcon from "@mui/icons-material/Circle";
 
 const LabelMenu = ({
   boundingBoxes,
@@ -45,11 +44,18 @@ const LabelMenu = ({
       <List>
         {boxesForCurrentFrame.map((box, index) => (
           <ListItem key={index} dense divider className="label-menu-item">
-            <CircleIcon
+            {box.interpolationID && (
+              <div className="interpolation-id">{box.interpolationID}</div>
+            )}
+            <div
               style={{
-                color: box.interpolate ? "var(--ui-button-active)" : "gray",
-                marginRight: "5px",
-                fontSize: "7px",
+                height: "80%",
+                width: "10px",
+                backgroundColor: box.interpolate
+                  ? "var(--ui-button-active)"
+                  : "gray",
+                marginRight: "8px",
+                borderRadius: "5px",
                 cursor: "pointer",
               }}
               onClick={() => toggleInterpolation(index)}
