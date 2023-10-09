@@ -197,6 +197,37 @@ function VideoPage() {
     }
   };
 
+  const onChangeDisplayOrder = (index, direction) => {
+    // Get boxes for the current frame.
+    const boxesForCurrentFrame = [...frameBoxes[currentFrame]];
+
+    // Check for valid index and direction.
+    if (
+      (direction === "up" && index > 0) ||
+      (direction === "down" && index < boxesForCurrentFrame.length - 1)
+    ) {
+      const targetIndex = direction === "up" ? index - 1 : index + 1;
+
+      // Swap the displayOrder of the boxes at index and targetIndex.
+      const tmp = boxesForCurrentFrame[index].displayOrder;
+      boxesForCurrentFrame[index].displayOrder =
+        boxesForCurrentFrame[targetIndex].displayOrder;
+      boxesForCurrentFrame[targetIndex].displayOrder = tmp;
+
+      // Swap the boxes at index and targetIndex.
+      [boxesForCurrentFrame[index], boxesForCurrentFrame[targetIndex]] = [
+        boxesForCurrentFrame[targetIndex],
+        boxesForCurrentFrame[index],
+      ];
+
+      // Update the state with the modified boxes.
+      setFrameBoxes((prev) => ({
+        ...prev,
+        [currentFrame]: boxesForCurrentFrame,
+      }));
+    }
+  };
+
   const saveBoxes = async () => {
     const boxesToSave = scaleBoxesForSave(frameBoxes, scale);
 
@@ -490,6 +521,7 @@ function VideoPage() {
                 boxClasses={classBoxes}
                 setBoxClasses={setClassBoxes}
                 onToggleInterpolation={toggleInterpolation}
+                onChangeDisplayOrder={onChangeDisplayOrder}
               />
             </div>
           </div>

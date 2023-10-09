@@ -10,6 +10,7 @@ const LabelMenu = ({
   boxClasses,
   setBoxClasses,
   onToggleInterpolation,
+  onChangeDisplayOrder,
 }) => {
   const handleClassChange = (index, newClass) => {
     onClassChange(index, newClass);
