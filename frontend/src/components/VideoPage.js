@@ -197,16 +197,36 @@ function VideoPage() {
     }
   };
 
-  const onChangeDisplayOrder = (draggedIndex, droppedIndex) => {
+  const onChangeDisplayOrder = (draggedOrder, droppedOrder) => {
     const boxesForCurrentFrame = [...frameBoxes[currentFrame]];
 
-    const [draggedItem] = boxesForCurrentFrame.splice(draggedIndex, 1); // Remove the dragged item from its position
+    // Convert the displayOrder to array indices
+    const draggedIndex = boxesForCurrentFrame.findIndex(
+      (box) => box.displayOrder === draggedOrder
+    );
+    const droppedIndex = boxesForCurrentFrame.findIndex(
+      (box) => box.displayOrder === droppedOrder
+    );
 
-    if (draggedIndex < droppedIndex) {
-      droppedIndex -= 1; // Adjust the drop index because the original spot is still open
+    const [draggedItem] = boxesForCurrentFrame.splice(draggedIndex, 1);
+
+    // Adjust the drop index based on whether the box is moved up or down
+    let insertIndex;
+    if (droppedIndex === -1) {
+      insertIndex = boxesForCurrentFrame.length;
+    } else {
+      insertIndex = droppedIndex;
+      if (draggedIndex < droppedIndex) {
+        insertIndex -= 1;
+      }
     }
 
-    boxesForCurrentFrame.splice(droppedIndex, 0, draggedItem); // Insert it at the adjusted drop position
+    boxesForCurrentFrame.splice(insertIndex, 0, draggedItem);
+
+    // Re-assign displayOrder values based on their new positions in the array
+    boxesForCurrentFrame.forEach((box, index) => {
+      box.displayOrder = index;
+    });
 
     setFrameBoxes((prev) => ({
       ...prev,
