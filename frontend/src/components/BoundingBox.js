@@ -179,21 +179,29 @@ function BoundingBox({
           displayOrder: null,
         };
 
-        const currentBoxes = frameBoxes[currentFrame] || [];
-        const highestOrder =
-          Math.max(-1, ...currentBoxes.map((b) => b.displayOrder)) + 1;
-        newBox.displayOrder = highestOrder;
+        const currentBoxes = [...(frameBoxes[currentFrame] || [])];
+
+        // Sort the current boxes by their displayOrder
+        currentBoxes.sort((a, b) => a.displayOrder - b.displayOrder);
+        currentBoxes.forEach((box, index) => {
+          box.displayOrder = index + 1; // increment displayOrder for existing boxes
+        });
+
+        newBox.displayOrder = 0; // new box will always be on top based on your previous logic
+
         setFrameBoxes((prev) => ({
           ...prev,
-          [currentFrame]: [...(frameBoxes[currentFrame] || []), newBox],
+          [currentFrame]: [newBox, ...currentBoxes], // Adding newBox at the start because of its displayOrder = 0
         }));
-        setDragData({ boxIndex: frameBoxes[currentFrame]?.length || 0 });
+        setDragData({ boxIndex: 0 }); // Since newBox is at the start of the array
+
         if (frameBoxes[currentFrame]) {
           updateInterpolationNumbers(frameBoxes[currentFrame]);
         }
 
         return;
       }
+
       if (!frameBoxes[currentFrame]) return;
       for (let i = 0; i < frameBoxes[currentFrame].length; i++) {
         const corner = isWithinBoxCorner(x, y, frameBoxes[currentFrame][i]);
@@ -624,15 +632,23 @@ function BoundingBox({
     const ctx = canvasRef.current.getContext("2d");
     ctx.clearRect(0, 0, videoWidth, videoHeight);
 
-    const sortedBoxes = (frameBoxes[currentFrame] || []).sort(
-      (a, b) => a.displayOrder - b.displayOrder
+    const boxesForRendering = [...(frameBoxes[currentFrame] || [])];
+
+    // Sort the cloned boxes in descending order for rendering
+    const sortedBoxes = boxesForRendering.sort(
+      (a, b) => b.displayOrder - a.displayOrder
     );
 
     sortedBoxes.forEach((box, index) => {
       const boxClass = box.class || "default";
       const { strokeColor } = boxClasses[boxClass] || {};
 
-      const isBoxSelected = index === selected;
+      let positionAfterSorting = sortedBoxes.findIndex(
+        (b) =>
+          frameBoxes[currentFrame][selected] &&
+          b.displayOrder === frameBoxes[currentFrame][selected].displayOrder
+      );
+      const isBoxSelected = index === positionAfterSorting;
 
       if (isBoxSelected) {
         ctx.setLineDash([5, 5]);
@@ -732,20 +748,24 @@ function BoundingBox({
       displayOrder: null,
     };
 
+    const currentBoxes = [...(frameBoxes[currentFrame] || [])];
+
+    // Sort the current boxes by their displayOrder
+    currentBoxes.sort((a, b) => a.displayOrder - b.displayOrder);
+    currentBoxes.forEach((box, index) => {
+      box.displayOrder = index + 1; // increment displayOrder to make room for the new box at position 0
+    });
+
+    newBox.displayOrder = 0; // new box will always be on top based on your previous logic
+
     newBox = normalizeBox(newBox);
-
-    const currentBoxes = frameBoxes[currentFrame] || [];
-    const highestOrder =
-      Math.max(-1, ...currentBoxes.map((b) => b.displayOrder)) + 1;
-    newBox.displayOrder = highestOrder;
-
     newBox = clampBoxToCanvas(newBox, videoWidth, videoHeight);
+
     setFrameBoxes((prev) => {
       const updatedFrameBoxes = {
         ...prev,
-        [currentFrame]: [...(frameBoxes[currentFrame] || []), newBox],
+        [currentFrame]: [newBox, ...currentBoxes], // Adding newBox at the start because of its displayOrder = 0
       };
-
       return updatedFrameBoxes;
     });
 
