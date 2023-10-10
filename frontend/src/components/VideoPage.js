@@ -197,35 +197,21 @@ function VideoPage() {
     }
   };
 
-  const onChangeDisplayOrder = (index, direction) => {
-    // Get boxes for the current frame.
+  const onChangeDisplayOrder = (draggedIndex, droppedIndex) => {
     const boxesForCurrentFrame = [...frameBoxes[currentFrame]];
 
-    // Check for valid index and direction.
-    if (
-      (direction === "up" && index > 0) ||
-      (direction === "down" && index < boxesForCurrentFrame.length - 1)
-    ) {
-      const targetIndex = direction === "up" ? index - 1 : index + 1;
+    const [draggedItem] = boxesForCurrentFrame.splice(draggedIndex, 1); // Remove the dragged item from its position
 
-      // Swap the displayOrder of the boxes at index and targetIndex.
-      const tmp = boxesForCurrentFrame[index].displayOrder;
-      boxesForCurrentFrame[index].displayOrder =
-        boxesForCurrentFrame[targetIndex].displayOrder;
-      boxesForCurrentFrame[targetIndex].displayOrder = tmp;
-
-      // Swap the boxes at index and targetIndex.
-      [boxesForCurrentFrame[index], boxesForCurrentFrame[targetIndex]] = [
-        boxesForCurrentFrame[targetIndex],
-        boxesForCurrentFrame[index],
-      ];
-
-      // Update the state with the modified boxes.
-      setFrameBoxes((prev) => ({
-        ...prev,
-        [currentFrame]: boxesForCurrentFrame,
-      }));
+    if (draggedIndex < droppedIndex) {
+      droppedIndex -= 1; // Adjust the drop index because the original spot is still open
     }
+
+    boxesForCurrentFrame.splice(droppedIndex, 0, draggedItem); // Insert it at the adjusted drop position
+
+    setFrameBoxes((prev) => ({
+      ...prev,
+      [currentFrame]: boxesForCurrentFrame,
+    }));
   };
 
   const saveBoxes = async () => {

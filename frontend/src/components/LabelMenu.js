@@ -37,6 +37,46 @@ const LabelMenu = ({
 
   const boxesForCurrentFrame = boundingBoxes[currentFrame] || [];
 
+  const handleDragStart = (e, displayOrder) => {
+    e.dataTransfer.setData("text/plain", displayOrder);
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const middle = (rect.top + rect.bottom) / 2;
+
+    if (e.clientY < middle) {
+      e.currentTarget.style.borderTop = "2px solid red";
+      e.currentTarget.style.borderBottom = "none";
+    } else {
+      e.currentTarget.style.borderTop = "none";
+      e.currentTarget.style.borderBottom = "2px solid red";
+    }
+  };
+
+  const handleDragLeave = (e) => {
+    e.currentTarget.style.borderTop = "none";
+    e.currentTarget.style.borderBottom = "none";
+  };
+
+  const handleDrop = (e, displayOrder) => {
+    e.preventDefault();
+
+    const isDropBelow = e.currentTarget.style.borderBottom === "2px solid red";
+
+    e.currentTarget.style.borderTop = "none";
+    e.currentTarget.style.borderBottom = "none";
+
+    const draggedItemDisplayOrder = +e.dataTransfer.getData("text/plain");
+    if (draggedItemDisplayOrder !== displayOrder) {
+      if (isDropBelow && draggedItemDisplayOrder < displayOrder) {
+        displayOrder += 1;
+      }
+      onChangeDisplayOrder(draggedItemDisplayOrder, displayOrder);
+    }
+  };
+
   return (
     <div className="label-menu">
       <Typography variant="h6" gutterBottom>
@@ -44,7 +84,17 @@ const LabelMenu = ({
       </Typography>
       <List>
         {boxesForCurrentFrame.map((box, index) => (
-          <ListItem key={index} dense divider className="label-menu-item">
+          <ListItem
+            key={box.displayOrder}
+            draggable
+            onDragStart={(e) => handleDragStart(e, box.displayOrder)}
+            onDragOver={(e) => handleDragOver(e, index)}
+            onDragLeave={(e) => handleDragLeave(e)}
+            onDrop={(e) => handleDrop(e, box.displayOrder)}
+            dense
+            divider
+            className="label-menu-item"
+          >
             {box.interpolationNumber && (
               <div className="interpolation-id">{box.interpolationNumber}</div>
             )}
