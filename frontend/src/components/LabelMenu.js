@@ -149,24 +149,23 @@ const LabelMenu = ({
                 </MenuItem>
               ))}
             </Select>
-
-            <button
-              className="label-menu-icon-button"
-              onClick={() => onDelete(index)}
-              title="Delete Box"
-            >
-              <DeleteIcon />
-            </button>
             <button
               className="label-menu-icon-button"
               onClick={() => handleVisibilityToggle(index)}
               title="Toggle Visibility"
             >
               {box.visible ? (
-                <VisibilityIcon style={{ color: "white" }} fontSize="16" />
+                <VisibilityIcon style={{ color: "white" }} fontSize="tiny" />
               ) : (
-                <VisibilityOffIcon style={{ color: "gray" }} fontSize="16" />
+                <VisibilityOffIcon style={{ color: "gray" }} fontSize="tiny" />
               )}
+            </button>
+            <button
+              className="label-menu-icon-button"
+              onClick={() => onDelete(index)}
+              title="Delete Box"
+            >
+              <DeleteIcon fontSize="small" />
             </button>
           </ListItem>
         ))}
