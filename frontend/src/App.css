@@ -281,6 +281,18 @@ h3 {
   overflow: hidden;
 }
 
+.label-menu-icon-button {
+  background-color: var(--secondary-bg);
+  border-radius: 50%;
+  padding: 10px;
+  margin: 20px 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  border-style: hidden;
+}
 .icon-button {
   background-color: var(--secondary-bg);
   border-radius: 50%;
@@ -292,6 +304,10 @@ h3 {
   cursor: pointer;
   transition: background-color 0.3s;
   border-style: hidden;
+}
+
+.label-menu-icon-button:hover {
+  background-color: #555;
 }
 
 .icon-button:hover {

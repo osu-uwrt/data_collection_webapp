@@ -158,6 +158,18 @@ function BoundingBox({
     return null;
   };
 
+  const toggleBoxVisibility = useCallback(() => {
+    if (selected !== null) {
+      const updatedBoxesForFrame = [...frameBoxes[currentFrame]];
+      updatedBoxesForFrame[selected].visible =
+        !updatedBoxesForFrame[selected].visible;
+      setFrameBoxes((prev) => ({
+        ...prev,
+        [currentFrame]: updatedBoxesForFrame,
+      }));
+    }
+  }, [selected, frameBoxes, currentFrame]);
+
   const handleMouseDown = useCallback(
     (event) => {
       const x = event.offsetX;
@@ -177,6 +189,7 @@ function BoundingBox({
           interpolationNumber: null,
           interpolationID: null,
           displayOrder: null,
+          visible: true,
         };
 
         const currentBoxes = [...(frameBoxes[currentFrame] || [])];
@@ -204,28 +217,30 @@ function BoundingBox({
 
       if (!frameBoxes[currentFrame]) return;
       for (let i = 0; i < frameBoxes[currentFrame].length; i++) {
-        const corner = isWithinBoxCorner(x, y, frameBoxes[currentFrame][i]);
-        const side = isWithinBoxSide(x, y, frameBoxes[currentFrame][i]);
-        const middle = isWithinBox(x, y, frameBoxes[currentFrame][i]);
+        if (frameBoxes[currentFrame][i].visible) {
+          const corner = isWithinBoxCorner(x, y, frameBoxes[currentFrame][i]);
+          const side = isWithinBoxSide(x, y, frameBoxes[currentFrame][i]);
+          const middle = isWithinBox(x, y, frameBoxes[currentFrame][i]);
 
-        if (corner || side || middle) {
-          setDragging(true);
-          newlySelectedBoxIndex = i;
-          setLastBoxSize({
-            width: frameBoxes[currentFrame][i].width,
-            height: frameBoxes[currentFrame][i].height,
-          });
-          setLastSelectedClass(frameBoxes[currentFrame][i].class);
-          setLastInterpolate(frameBoxes[currentFrame][i].interpolate);
-          if (corner) {
-            setDragData({ boxIndex: i, corner });
-            break;
-          } else if (side) {
-            setDragData({ boxIndex: i, side });
-            break;
-          } else if (middle) {
-            setDragData({ boxIndex: i, middle, startX: x, startY: y });
-            break;
+          if (corner || side || middle) {
+            setDragging(true);
+            newlySelectedBoxIndex = i;
+            setLastBoxSize({
+              width: frameBoxes[currentFrame][i].width,
+              height: frameBoxes[currentFrame][i].height,
+            });
+            setLastSelectedClass(frameBoxes[currentFrame][i].class);
+            setLastInterpolate(frameBoxes[currentFrame][i].interpolate);
+            if (corner) {
+              setDragData({ boxIndex: i, corner });
+              break;
+            } else if (side) {
+              setDragData({ boxIndex: i, side });
+              break;
+            } else if (middle) {
+              setDragData({ boxIndex: i, middle, startX: x, startY: y });
+              break;
+            }
           }
         }
       }
@@ -275,42 +290,44 @@ function BoundingBox({
 
       if (!frameBoxes[currentFrame]) return;
       for (let i = frameBoxes[currentFrame].length - 1; i >= 0; i--) {
-        const corner = isWithinBoxCorner(x, y, frameBoxes[currentFrame][i]);
-        const side = isWithinBoxSide(x, y, frameBoxes[currentFrame][i]);
-        const middle = isWithinBox(x, y, frameBoxes[currentFrame][i]);
+        if (frameBoxes[currentFrame][i].visible) {
+          const corner = isWithinBoxCorner(x, y, frameBoxes[currentFrame][i]);
+          const side = isWithinBoxSide(x, y, frameBoxes[currentFrame][i]);
+          const middle = isWithinBox(x, y, frameBoxes[currentFrame][i]);
 
-        if (corner) {
-          switch (corner) {
-            case "topLeft":
-            case "bottomRight":
-              cursorStyle = "nwse-resize";
-              break;
-            case "topRight":
-            case "bottomLeft":
-              cursorStyle = "nesw-resize";
-              break;
-            default:
-              break;
+          if (corner) {
+            switch (corner) {
+              case "topLeft":
+              case "bottomRight":
+                cursorStyle = "nwse-resize";
+                break;
+              case "topRight":
+              case "bottomLeft":
+                cursorStyle = "nesw-resize";
+                break;
+              default:
+                break;
+            }
+          } else if (side) {
+            switch (side) {
+              case "leftSide":
+              case "rightSide":
+                cursorStyle = "ew-resize";
+                break;
+              case "topSide":
+              case "bottomSide":
+                cursorStyle = "ns-resize";
+                break;
+              default:
+                break;
+            }
+          } else if (middle) {
+            cursorStyle = "move";
           }
-        } else if (side) {
-          switch (side) {
-            case "leftSide":
-            case "rightSide":
-              cursorStyle = "ew-resize";
-              break;
-            case "topSide":
-            case "bottomSide":
-              cursorStyle = "ns-resize";
-              break;
-            default:
-              break;
-          }
-        } else if (middle) {
-          cursorStyle = "move";
         }
-      }
 
-      canvas.style.cursor = cursorStyle;
+        canvas.style.cursor = cursorStyle;
+      }
     }
 
     if (!dragging) return;
@@ -495,6 +512,7 @@ function BoundingBox({
                 interpolationNumber: null,
                 interpolationID: startBox.interpolationID,
                 displayOrder: null,
+                visible: true,
               };
 
               const correctIndex = frameBoxes[j].findIndex(
@@ -514,6 +532,19 @@ function BoundingBox({
     }
     return frameBoxes;
   };
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "v" || event.key === "V") {
+        toggleBoxVisibility();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [toggleBoxVisibility]);
 
   useEffect(() => {
     if (runInterpolation) {
@@ -632,7 +663,9 @@ function BoundingBox({
     const ctx = canvasRef.current.getContext("2d");
     ctx.clearRect(0, 0, videoWidth, videoHeight);
 
-    const boxesForRendering = [...(frameBoxes[currentFrame] || [])];
+    const boxesForRendering = [...(frameBoxes[currentFrame] || [])].filter(
+      (box) => box.visible
+    );
 
     // Sort the cloned boxes in descending order for rendering
     const sortedBoxes = boxesForRendering.sort(
@@ -746,6 +779,7 @@ function BoundingBox({
       interpolationNumber: null,
       interpolationID: null,
       displayOrder: null,
+      visible: true,
     };
 
     const currentBoxes = [...(frameBoxes[currentFrame] || [])];

@@ -52,6 +52,21 @@ function VideoPage() {
   const scaleY = Math.min(MAX_VIDEO_HEIGHT / data.video_height, 1);
   const scale = Math.min(scaleX, scaleY);
 
+  const toggleBoxVisibility = (index) => {
+    const updatedBoxesForFrame = [...frameBoxes[currentFrame]];
+
+    // Toggle visibility at the specified index
+    if (updatedBoxesForFrame[index]) {
+      updatedBoxesForFrame[index].visible =
+        !updatedBoxesForFrame[index].visible;
+    }
+
+    setFrameBoxes((prev) => ({
+      ...prev,
+      [currentFrame]: updatedBoxesForFrame,
+    }));
+  };
+
   const scaleBoxesForSave = (boxes, scale) => {
     const scaledBoxes = { ...boxes };
     for (let frame in scaledBoxes) {
@@ -528,6 +543,7 @@ function VideoPage() {
                 setBoxClasses={setClassBoxes}
                 onToggleInterpolation={toggleInterpolation}
                 onChangeDisplayOrder={onChangeDisplayOrder}
+                onToggleVisibility={toggleBoxVisibility}
               />
             </div>
           </div>

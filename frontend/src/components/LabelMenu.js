@@ -1,6 +1,8 @@
 import React from "react";
 import { List, ListItem, Select, MenuItem, Typography } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
 const LabelMenu = ({
   boundingBoxes,
@@ -11,6 +13,7 @@ const LabelMenu = ({
   setBoxClasses,
   onToggleInterpolation,
   onChangeDisplayOrder,
+  onToggleVisibility,
 }) => {
   const handleClassChange = (index, newClass) => {
     onClassChange(index, newClass);
@@ -53,6 +56,10 @@ const LabelMenu = ({
       e.currentTarget.style.borderTop = "none";
       e.currentTarget.style.borderBottom = "2px solid red";
     }
+  };
+
+  const handleVisibilityToggle = (index) => {
+    onToggleVisibility(index);
   };
 
   const handleDragLeave = (e) => {
@@ -142,12 +149,24 @@ const LabelMenu = ({
                 </MenuItem>
               ))}
             </Select>
+
             <button
-              className="icon-button"
+              className="label-menu-icon-button"
               onClick={() => onDelete(index)}
               title="Delete Box"
             >
               <DeleteIcon />
+            </button>
+            <button
+              className="label-menu-icon-button"
+              onClick={() => handleVisibilityToggle(index)}
+              title="Toggle Visibility"
+            >
+              {box.visible ? (
+                <VisibilityIcon style={{ color: "white" }} fontSize="16" />
+              ) : (
+                <VisibilityOffIcon style={{ color: "gray" }} fontSize="16" />
+              )}
             </button>
           </ListItem>
         ))}
