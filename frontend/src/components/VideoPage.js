@@ -15,6 +15,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { updateInterpolationNumbers } from "./utils";
 import Slide from "@mui/material/Slide";
 import Alert from "@mui/material/Alert";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 function TransitionRight(props) {
   return <Slide {...props} direction="right" />;
@@ -47,6 +48,7 @@ function VideoPage() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // can be 'error', 'info', 'warning', 'success'
+  const [allBoxesVisible, setAllBoxesVisible] = useState(true);
 
   const scaleX = Math.min(MAX_VIDEO_WIDTH / data.video_width, 1);
   const scaleY = Math.min(MAX_VIDEO_HEIGHT / data.video_height, 1);
@@ -65,6 +67,21 @@ function VideoPage() {
       ...prev,
       [currentFrame]: updatedBoxesForFrame,
     }));
+  };
+
+  const toggleAllBoxVisibility = () => {
+    setAllBoxesVisible(!allBoxesVisible);
+    // Deep copy the frameBoxes object to ensure React detects changes
+    const updatedFrameBoxes = JSON.parse(JSON.stringify(frameBoxes));
+
+    // Toggle visibility for every box of every frame
+    for (let frame in updatedFrameBoxes) {
+      for (let i = 0; i < updatedFrameBoxes[frame].length; i++) {
+        updatedFrameBoxes[frame][i].visible = !allBoxesVisible;
+      }
+    }
+
+    setFrameBoxes(updatedFrameBoxes);
   };
 
   const scaleBoxesForSave = (boxes, scale) => {
@@ -482,6 +499,17 @@ function VideoPage() {
                 title="Delete All Boxes"
               >
                 <DeleteIcon />
+              </button>
+              <button
+                className="icon-button"
+                onClick={toggleAllBoxVisibility}
+                title="Toggle Visibility for All Boxes"
+              >
+                <VisibilityIcon
+                  style={{
+                    color: allBoxesVisible ? "var(--highlight-text)" : "gray",
+                  }}
+                />
               </button>
             </div>
 
