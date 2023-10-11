@@ -22,7 +22,7 @@ function TransitionRight(props) {
 }
 
 const BASE_URL = process.env.REACT_APP_BASE_URL;
-const MAX_VIDEO_WIDTH = 840; // Example values; adjust as required
+const MAX_VIDEO_WIDTH = 1440; // Example values; adjust as required
 const MAX_VIDEO_HEIGHT = 800;
 
 /* TODO 
@@ -84,31 +84,34 @@ function VideoPage() {
     setFrameBoxes(updatedFrameBoxes);
   };
 
-  const scaleBoxesForSave = (boxes, scale) => {
-    const scaledBoxes = { ...boxes };
-    for (let frame in scaledBoxes) {
-      scaledBoxes[frame] = scaledBoxes[frame].map((box) => ({
+  const normalizeBoxesForSave = (boxes, videoWidth, videoHeight, scale) => {
+    const normalizedBoxes = { ...boxes };
+    for (let frame in normalizedBoxes) {
+      normalizedBoxes[frame] = normalizedBoxes[frame].map((box) => ({
         ...box,
-        x: box.x / scale, // Divide by scale
-        y: box.y / scale,
-        width: box.width / scale,
-        height: box.height / scale,
+        x: (box.x + box.width / 2) / scale / videoWidth,
+        y: (box.y + box.height / 2) / scale / videoHeight,
+        width: box.width / scale / videoWidth,
+        height: box.height / scale / videoHeight,
       }));
     }
-    return scaledBoxes;
+    return normalizedBoxes;
   };
 
-  const scaleBoxesOnLoad = (boxes, scale) => {
-    console.log("scaleX:", scaleX, "scaleY:", scaleY, "scale:", scale);
-
+  const scaleNormalizedBoxesOnLoad = (
+    boxes,
+    videoWidth,
+    videoHeight,
+    scale
+  ) => {
     const scaledBoxes = { ...boxes };
     for (let frame in scaledBoxes) {
       scaledBoxes[frame] = scaledBoxes[frame].map((box) => ({
         ...box,
-        x: box.x * scale, // Multiply by scale
-        y: box.y * scale,
-        width: box.width * scale,
-        height: box.height * scale,
+        x: box.x * videoWidth * scale - (box.width * videoWidth * scale) / 2,
+        y: box.y * videoHeight * scale - (box.height * videoHeight * scale) / 2,
+        width: box.width * videoWidth * scale,
+        height: box.height * videoHeight * scale,
       }));
     }
     return scaledBoxes;
@@ -151,6 +154,7 @@ function VideoPage() {
     try {
       const videoResponse = await axios.get(`${BASE_URL}/video/${videoName}`);
       setData(videoResponse.data);
+      console.log(videoResponse.data);
 
       // Calculate scale values after fetching video data
       const localScaleX = Math.min(
@@ -169,9 +173,12 @@ function VideoPage() {
           `${BASE_URL}/data/frames/${videoName}/boxes.json`
         );
         let boxesData = boxesResponse.data.boxes || {};
-        console.log("Loading unscaled", boxesData);
-        boxesData = scaleBoxesOnLoad(boxesData, localScale); // Use local scale here
-        console.log("Loading scaled", boxesData);
+        boxesData = scaleNormalizedBoxesOnLoad(
+          boxesData,
+          videoResponse.data.video_width,
+          videoResponse.data.video_height,
+          localScale
+        );
         setFrameBoxes(boxesData);
       } catch (error) {
         console.error("Failed to fetch boxes data:", error);
@@ -267,10 +274,17 @@ function VideoPage() {
   };
 
   const saveBoxes = async () => {
-    const boxesToSave = scaleBoxesForSave(frameBoxes, scale);
+    const boxesToSave = normalizeBoxesForSave(
+      frameBoxes,
+      data.video_width,
+      data.video_height,
+      scale
+    );
 
     const payload = {
       video_name: videoName,
+      video_width: data.video_width,
+      video_height: data.video_height,
       boxes: boxesToSave,
     };
     try {
