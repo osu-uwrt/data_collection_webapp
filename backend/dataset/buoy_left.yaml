@@ -1,0 +1,6 @@
+{
+  "train": "/home/ubuntu/Projects/data_collection_webapp/backend/dataset/images/train/buoy_left/",
+  "val": "/home/ubuntu/Projects/data_collection_webapp/backend/dataset/images/val/buoy_left/",
+  "nc": 1,
+  "names": [0],
+}

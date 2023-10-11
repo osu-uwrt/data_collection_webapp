@@ -1,0 +1,8 @@
+{
+  "train": "/home/ubuntu/Projects/data_collection_webapp/backend/dataset/images/train/IMG_2503/",
+  "val": "/home/ubuntu/Projects/data_collection_webapp/backend/dataset/images/val/IMG_2503/",
+  "nc": 1,
+  "names": [
+    0
+  ]
+}
