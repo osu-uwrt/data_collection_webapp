@@ -22,7 +22,7 @@ function TransitionRight(props) {
 }
 
 const BASE_URL = process.env.REACT_APP_BASE_URL;
-const MAX_VIDEO_WIDTH = 1440; // Example values; adjust as required
+const MAX_VIDEO_WIDTH = 440; // Example values; adjust as required
 const MAX_VIDEO_HEIGHT = 800;
 
 /* TODO 
@@ -31,7 +31,7 @@ ADJUST PADDING BETWEEN SLIDER/BUTTONS
 */
 
 function VideoPage() {
-  const { videoName } = useParams();
+  const { videoId } = useParams();
   const [data, setData] = useState({
     video_name: "",
     total_frames: 0,
@@ -152,7 +152,7 @@ function VideoPage() {
 
   const fetchVideoData = async () => {
     try {
-      const videoResponse = await axios.get(`${BASE_URL}/video/${videoName}`);
+      const videoResponse = await axios.get(`${BASE_URL}/video/${videoId}`);
       setData(videoResponse.data);
       console.log(videoResponse.data);
 
@@ -170,7 +170,7 @@ function VideoPage() {
       // Fetching and scaling boxes
       try {
         const boxesResponse = await axios.get(
-          `${BASE_URL}/data/frames/${videoName}/boxes.json`
+          `${BASE_URL}/data/frames/${videoId}/boxes.json`
         );
         let boxesData = boxesResponse.data.boxes || {};
         boxesData = scaleNormalizedBoxesOnLoad(
@@ -195,7 +195,7 @@ function VideoPage() {
 
   useEffect(() => {
     fetchData();
-  }, [videoName]);
+  }, [videoId]);
 
   const handleKeyDown = useCallback(
     (event) => {
@@ -282,11 +282,13 @@ function VideoPage() {
     );
 
     const payload = {
-      video_name: videoName,
+      video_id: videoId,
       video_width: data.video_width,
       video_height: data.video_height,
       boxes: boxesToSave,
     };
+
+    console.log(payload);
     try {
       await axios.post(`${BASE_URL}/save-boxes`, payload, {
         headers: {
@@ -541,7 +543,7 @@ function VideoPage() {
                 <img
                   id="current-frame"
                   className="videoFrame"
-                  src={`${BASE_URL}/data/frames/${data.video_name}/frame${currentFrame}.jpg`}
+                  src={`${BASE_URL}/data/frames/${videoId}/frame${currentFrame}.jpg`}
                   alt="Current frame"
                   style={{
                     width: `${data.video_width * scale}px`, // Adjusted width

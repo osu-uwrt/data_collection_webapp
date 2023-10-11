@@ -1,23 +1,43 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from app_instance import app
 from modules.video_processing import get_total_frames
-from PIL import Image
 import os
+import sqlite3
+
+DB_PATH = os.path.join(os.getcwd(), "backend/data/db/data.db")
+
+def get_db_connection():
+    return sqlite3.connect(DB_PATH)
 
 
-@app.route('/video/<video_name>')
-def page2(video_name):
-    frames_folder = os.path.join(app.root_path, 'data', 'frames', video_name)
-    total_frames = get_total_frames(frames_folder)
+@app.route('/video/<int:video_id>')
+def page2(video_id):
+    # Connect to the database
+    conn = get_db_connection()
+    c = conn.cursor()
     
-    # Assuming the frames are named in a consistent manner like frame0.jpg, frame1.jpg, etc.
-    sample_frame_path = os.path.join(frames_folder, 'frame0.jpg')
-    with Image.open(sample_frame_path) as img:
-        width, height = img.size
+    # Fetch the video details from the Video table using the video_id
+    c.execute("SELECT video_name, video_width, video_height FROM Video WHERE video_id=?", (video_id,))
+    row = c.fetchone()
+    
+    if row is None:
+        # Close the connection and return an error if the video_id is not found in the table
+        conn.close()
+        return jsonify({"status": "error", "message": f"No data found for video with ID: {video_id}"}), 404
+
+    video_name, video_width, video_height = row
+    
+    frames_folder = os.path.join(app.root_path, 'data', 'frames', str(video_id))
+
+    total_frames = get_total_frames(frames_folder)
+
+    # Close the database connection
+    conn.close()
 
     return jsonify({
+        'video_id': video_id,
         'video_name': video_name,
         'total_frames': total_frames,
-        'video_height': height,
-        'video_width': width
+        'video_height': video_height,
+        'video_width': video_width
     })

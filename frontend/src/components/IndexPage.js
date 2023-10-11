@@ -28,16 +28,16 @@ function IndexPage() {
     <div className="index-page">
       <h1 className="title">Available Videos</h1>
       <div className="video-list">
-        {videos.map((videoName) => (
-          <div key={videoName} className="video-item">
-            <Link to={`/video/${videoName}`} className="video-link">
+        {videos.map((video) => (
+          <div key={video.video_id} className="video-item">
+            <Link to={`/video/${video.video_id}`} className="video-link">
               <div className="video-thumbnail">
                 <img
-                  src={`${BASE_URL}/data/frames/${videoName}/frame0.jpg`}
-                  alt={`First frame of ${videoName}`}
+                  src={`${BASE_URL}/data/frames/${video.video_id}/frame0.jpg`}
+                  alt={`First frame of ${video.video_name}`}
                 />
               </div>
-              <p className="video-name">{videoName}</p>
+              <p className="video-name">{video.video_name}</p>
             </Link>
           </div>
         ))}

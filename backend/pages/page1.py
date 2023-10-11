@@ -18,9 +18,8 @@ def page1():
     if request.method == 'POST' and form.validate():
         video_file = request.files['video']
 
-        video_filename = secure_filename(video_file.filename)
-        save_and_extract_frames(video_file)
+        video_id = save_and_extract_frames(video_file)  # capture the returned video_id
 
         flash('Processing completed', 'success')
-        return redirect(url_for('page2', video_name=video_filename.split('.')[0])) 
+        return redirect(url_for('page2', video_id=video_id))  # use video_id instead of video_name
     return render_template('page1.html', form=form)

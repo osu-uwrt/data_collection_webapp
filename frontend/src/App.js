@@ -7,7 +7,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/video/:videoName" element={<VideoPage />} />
+        <Route path="/video/:videoId" element={<VideoPage />} />
         <Route path="/" element={<IndexPage />} />
       </Routes>
     </Router>

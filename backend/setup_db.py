@@ -10,40 +10,35 @@ def create_tables():
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
 
-    c.execute('''CREATE TABLE video_data (
-                id INTEGER PRIMARY KEY,
-                video_id INTEGER NOT NULL,
-                video_name TEXT NOT NULL UNIQUE,
-                FOREIGN KEY(video_id) REFERENCES video(id))''')
+    # Create Video table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS Video (
+            video_id INTEGER PRIMARY KEY,
+            video_name TEXT NOT NULL,
+            video_width INTEGER NOT NULL,
+            video_height INTEGER NOT NULL
+        )
+    ''')
 
-    c.execute('''CREATE TABLE frames (
-                id INTEGER PRIMARY KEY,
-                video_data_id INTEGER NOT NULL,
-                frame_number INTEGER NOT NULL,
-                FOREIGN KEY(video_data_id) REFERENCES video_data(id))''')
-
-    c.execute('''CREATE TABLE bounding_boxes (
-                id INTEGER PRIMARY KEY,
-                frame_id INTEGER NOT NULL,
-                class TEXT NOT NULL,
-                displayOrder INTEGER,
-                height REAL NOT NULL,
-                interpolate BOOLEAN,
-                interpolationID TEXT,
-                interpolationNumber TEXT,
-                width INTEGER NOT NULL,
-                x REAL NOT NULL,
-                y REAL NOT NULL,
-                visible BOOLEAN,
-                FOREIGN KEY(frame_id) REFERENCES frames(id))''')
-    
-    c.execute('''CREATE TABLE video (
-                id INTEGER PRIMARY KEY,
-                title TEXT NOT NULL UNIQUE,
-                file_path TEXT,
-                team_id INTEGER,
-                is_published_to_main INTEGER DEFAULT 0)''')  # Add other fields as necessary
-
+    # Create BoundingBox table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS BoundingBox (
+            box_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            video_id INTEGER,
+            frame_number INTEGER NOT NULL,
+            class TEXT NOT NULL,
+            displayOrder INTEGER NOT NULL,
+            height REAL NOT NULL,
+            width REAL NOT NULL,
+            x REAL NOT NULL,
+            y REAL NOT NULL,
+            interpolate BOOLEAN NOT NULL,
+            interpolationID INTEGER,
+            interpolationNumber INTEGER,
+            visible BOOLEAN NOT NULL,
+            FOREIGN KEY (video_id) REFERENCES Video(video_id)
+        )
+    ''')
 
     conn.commit()
     conn.close()
