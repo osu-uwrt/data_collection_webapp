@@ -22,7 +22,7 @@ function TransitionRight(props) {
 }
 
 const BASE_URL = process.env.REACT_APP_BASE_URL;
-const MAX_VIDEO_WIDTH = 440; // Example values; adjust as required
+const MAX_VIDEO_WIDTH = 1440; // Example values; adjust as required
 const MAX_VIDEO_HEIGHT = 800;
 
 /* TODO 

@@ -40,6 +40,19 @@ def create_tables():
         )
     ''')
 
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS Users (
+            user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            hashed_password TEXT NOT NULL,
+            email TEXT NOT NULL UNIQUE,
+            first_name TEXT,
+            last_name TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            last_login DATETIME
+        )   
+    ''')
+
     conn.commit()
     conn.close()
 
