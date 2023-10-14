@@ -443,3 +443,19 @@ h3 {
   left: -3px;
   color: var(--primary-text);
 }
+
+.white-border .MuiOutlinedInput-notchedOutline {
+  border-color: white !important;
+}
+
+.white-input {
+  color: white !important;
+}
+
+.white-label .MuiInputLabel-outlined.Mui-focused {
+  color: white !important;
+}
+
+.white-label .MuiInputLabel-outlined {
+  color: white !important;
+}

@@ -10,7 +10,6 @@ def create_tables():
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
 
-    # Create Video table
     c.execute('''
         CREATE TABLE IF NOT EXISTS Video (
             video_id INTEGER PRIMARY KEY,
@@ -20,7 +19,6 @@ def create_tables():
         )
     ''')
 
-    # Create BoundingBox table
     c.execute('''
         CREATE TABLE IF NOT EXISTS BoundingBox (
             box_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,8 +53,20 @@ def create_tables():
 
     c.execute('''
         CREATE TABLE IF NOT EXISTS Classes (
-              class_id INTEGER PRIMARY KEY,
-              class_name TEXT NOT NULL
+            class_id INTEGER PRIMARY KEY,
+            class_name TEXT NOT NULL
+        )
+    ''')
+
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS UserClassColors (
+            user_class_color_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            class_id INTEGER,
+            color TEXT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES Users(user_id),
+            FOREIGN KEY (class_id) REFERENCES Classes(class_id),
+            UNIQUE(user_id, class_id)
         )
     ''')
 
