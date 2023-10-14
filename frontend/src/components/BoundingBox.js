@@ -16,16 +16,16 @@ function BoundingBox({
   currentFrame,
   frameBoxes,
   setFrameBoxes,
-  onDeleteRef,
   boxClasses,
   showLabels,
   runInterpolation,
   onInterpolationCompleted,
+  selected,
+  setSelected,
 }) {
   const canvasRef = useRef(null);
   const [dragging, setDragging] = useState(false);
   const [dragData, setDragData] = useState({ boxIndex: null, corner: null });
-  const [selected, setSelected] = useState(null);
   const [lastBoxSize, setLastBoxSize] = useState({ width: 100, height: 100 });
   const [creatingBox, setCreatingBox] = useState(false);
   const [initialPosition, setInitialPosition] = useState({ x: 0, y: 0 });
@@ -35,23 +35,24 @@ function BoundingBox({
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("error");
   const [currentFrameBoxes, setCurrentFrameBoxes] = useState([]);
+  const previousLength = useRef(currentFrameBoxes?.length || 0);
 
   const MIN_WIDTH = 10;
   const MIN_HEIGHT = 10;
 
-  const handleDelete = useCallback(() => {
-    if (selected !== null) {
-      const updatedBoxesForFrame = [currentFrameBoxes];
-      updatedBoxesForFrame.splice(selected, 1);
-      setCurrentFrameBoxes(updatedBoxesForFrame);
-      if (currentFrameBoxes) {
-        updateInterpolationNumbers(currentFrameBoxes);
-      }
+  useEffect(() => {
+    const currentLength = currentFrameBoxes?.length || 0;
+
+    if (currentLength < previousLength.current) {
       setSelected(null);
-      setDragging(false);
-      setDragData({ boxIndex: null, corner: null });
     }
+
+    previousLength.current = currentLength;
   }, [currentFrameBoxes]);
+
+  useEffect(() => {
+    console.log(dragging); // This will print the updated value whenever dragging changes
+  }, [dragging]);
 
   useEffect(() => {
     setCurrentFrameBoxes(frameBoxes[currentFrame]);
@@ -67,13 +68,7 @@ function BoundingBox({
       ...prev,
       [currentFrame]: currentFrameBoxes,
     }));
-  }, [currentFrameBoxes.length]);
-
-  useEffect(() => {
-    if (onDeleteRef && typeof onDeleteRef.current !== "undefined") {
-      onDeleteRef.current = handleDelete;
-    }
-  }, [currentFrameBoxes, selected]);
+  }, [currentFrameBoxes.length, selected]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -184,7 +179,7 @@ function BoundingBox({
       const x = event.offsetX;
       const y = event.offsetY;
       let newlySelectedBoxIndex = null;
-      setDragging(false);
+      let isDragging = dragging;
 
       if (event.ctrlKey) {
         setCreatingBox(true);
@@ -230,7 +225,8 @@ function BoundingBox({
           const middle = isWithinBox(x, y, currentFrameBoxes[i]);
 
           if (corner || side || middle) {
-            setDragging(true);
+            isDragging = true;
+            console.log("A");
             newlySelectedBoxIndex = i;
             setLastBoxSize({
               width: currentFrameBoxes[i].width,
@@ -248,20 +244,19 @@ function BoundingBox({
               setDragData({ boxIndex: i, middle, startX: x, startY: y });
               break;
             }
+          } else {
+            isDragging = false;
           }
         }
       }
-      console.log("index", newlySelectedBoxIndex);
-      console.log("dragging", dragging);
 
-      if (newlySelectedBoxIndex === null && !dragging) {
+      if (newlySelectedBoxIndex === null && !isDragging) {
         setSelected(null);
-        console.log("A");
       } else if (newlySelectedBoxIndex !== null) {
         setSelected(newlySelectedBoxIndex);
         setLastSelectedClass(currentFrameBoxes[newlySelectedBoxIndex].class);
-        console.log("B");
       }
+      setDragging(isDragging);
     },
     [currentFrameBoxes]
   );
@@ -569,7 +564,6 @@ function BoundingBox({
   }, [runInterpolation]);
 
   const handleMouseUp = () => {
-    if (!currentFrameBoxes) return;
     if (creatingBox) {
       setCreatingBox(false);
       const normalizedBox = normalizeBox(currentFrameBoxes[dragData.boxIndex]);

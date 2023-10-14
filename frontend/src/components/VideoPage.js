@@ -1,4 +1,11 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  isValidElement,
+} from "react";
+import ReactDOM from "react-dom";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import BoundingBox from "./BoundingBox";
@@ -49,6 +56,11 @@ function VideoPage() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // can be 'error', 'info', 'warning', 'success'
   const [allBoxesVisible, setAllBoxesVisible] = useState(true);
+  const [selected, setSelected] = useState(null);
+
+  useEffect(() => {
+    console.log("Selected value in Parent:", selected);
+  }, [selected]);
 
   const scaleX = Math.min(MAX_VIDEO_WIDTH / data.video_width, 1);
   const scaleY = Math.min(MAX_VIDEO_HEIGHT / data.video_height, 1);
@@ -183,6 +195,15 @@ function VideoPage() {
       } catch (error) {
         console.error("Failed to fetch boxes data:", error);
       }
+
+      for (let i = 0; i < videoResponse.data.total_frames; i++) {
+        if (frameBoxes[i] === undefined) {
+          setFrameBoxes((prev) => ({
+            ...prev,
+            [i]: [],
+          }));
+        }
+      }
     } catch (error) {
       console.error("Failed to fetch video data:", error);
     }
@@ -209,7 +230,7 @@ function VideoPage() {
         handleDeleteClick();
       }
     },
-    [currentFrame, data.total_frames, carryBoxes]
+    [currentFrame, data.total_frames, carryBoxes, selected]
   );
 
   const handleDeleteAllBoxes = () => {
@@ -219,21 +240,26 @@ function VideoPage() {
     }
   };
 
-  const handleDeleteClick = (boxIndex) => {
-    const updatedBoxesForFrame = [...(frameBoxes[currentFrame] || [])];
+  const handleDeleteClick = () => {
+    console.log("selected", selected);
+    if (selected === null) return;
 
-    if (boxIndex !== undefined) {
-      updatedBoxesForFrame.splice(boxIndex, 1);
+    deleteBoxAtIndex(selected);
+  };
 
+  const deleteBoxAtIndex = (index) => {
+    ReactDOM.unstable_batchedUpdates(() => {
+      const updatedBoxesForFrame = [...(frameBoxes[currentFrame] || [])];
+      updatedBoxesForFrame.splice(index, 1);
       updateInterpolationNumbers(updatedBoxesForFrame);
 
       setFrameBoxes((prev) => ({
         ...prev,
         [currentFrame]: updatedBoxesForFrame,
       }));
-    } else if (deleteRef.current) {
-      deleteRef.current();
-    }
+    });
+
+    showSnackbar("Box deleted successfully!");
   };
 
   const onChangeDisplayOrder = (draggedOrder, droppedOrder) => {
@@ -562,6 +588,8 @@ function VideoPage() {
                   showLabels={showLabels}
                   runInterpolation={runInterpolation}
                   onInterpolationCompleted={onInterpolationCompleted}
+                  selected={selected}
+                  setSelected={setSelected}
                 />
               </div>
             </div>
@@ -582,7 +610,7 @@ function VideoPage() {
                     [currentFrame]: updatedBoxesForFrame,
                   }));
                 }}
-                onDelete={handleDeleteClick}
+                onDelete={deleteBoxAtIndex}
                 boxClasses={classBoxes}
                 setBoxClasses={setClassBoxes}
                 onToggleInterpolation={toggleInterpolation}
