@@ -459,3 +459,47 @@ h3 {
 .white-label .MuiInputLabel-outlined {
   color: white !important;
 }
+
+.minimalist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  width: 100%;
+  padding: 0 16px;
+  height: 60px; /* This sets a fixed height for your header */
+  box-sizing: border-box; /* This ensures padding is included in the height */
+}
+
+.index-page a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.auth-text-link {
+  color: white;
+  margin: 0 8px; /* Adjust spacing as needed */
+  transition: color 0.3s ease, transform 0.3s ease; /* Smooth transition for hover effects */
+}
+
+.auth-text-link:hover {
+  color: #ddd; /* Change color to a slightly darker shade on hover */
+  transform: scale(1.05); /* Slightly enlarge text on hover */
+  text-decoration: none; /* Remove underline on hover */
+}
+
+.header-left {
+  flex: 1;
+}
+
+.header-right {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.header-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}

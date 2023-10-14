@@ -15,7 +15,8 @@ def create_tables():
             video_id INTEGER PRIMARY KEY,
             video_name TEXT NOT NULL,
             video_width INTEGER NOT NULL,
-            video_height INTEGER NOT NULL
+            video_height INTEGER NOT NULL,
+            team_id INTEGER REFERENCES Team(team_id)
         )
     ''')
 
@@ -47,7 +48,8 @@ def create_tables():
             first_name TEXT,
             last_name TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            last_login DATETIME
+            last_login DATETIME,
+            team_id INTEGER REFERENCES Team(team_id)
         )   
     ''')
 
@@ -67,6 +69,14 @@ def create_tables():
             FOREIGN KEY (user_id) REFERENCES Users(user_id),
             FOREIGN KEY (class_id) REFERENCES Classes(class_id),
             UNIQUE(user_id, class_id)
+        )
+    ''')
+
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS Team (
+            team_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            team_name TEXT NOT NULL UNIQUE,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     ''')
 
