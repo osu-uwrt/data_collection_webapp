@@ -53,6 +53,13 @@ def create_tables():
         )   
     ''')
 
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS Classes (
+              class_id INTEGER PRIMARY KEY,
+              class_name TEXT NOT NULL
+        )
+    ''')
+
     conn.commit()
     conn.close()
 

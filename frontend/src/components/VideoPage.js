@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  isValidElement,
-} from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import ReactDOM from "react-dom";
 import { useParams } from "react-router-dom";
 import axios from "axios";
@@ -54,7 +48,7 @@ function VideoPage() {
   const [runInterpolation, setRunInterpolation] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // can be 'error', 'info', 'warning', 'success'
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [allBoxesVisible, setAllBoxesVisible] = useState(true);
   const [selected, setSelected] = useState(null);
 

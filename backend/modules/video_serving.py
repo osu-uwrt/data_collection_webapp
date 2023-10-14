@@ -65,3 +65,23 @@ def get_boxes(video_id):
         return jsonify(boxes_data)
     else:
         return jsonify({"error": "Boxes data not found for this video"}), 404
+    
+@app.route('/data/classes', methods=['GET'])
+def get_classes():
+    conn = get_db_conn()
+    c = conn.cursor()
+    
+    c.execute('SELECT class_id, class_name FROM Classes')
+    
+    classes_data_db = c.fetchall()
+    conn.close()
+
+    # Now, we'll create a dictionary where class_id is the key and class_name is the value.
+    classes_data = {str(row[0]): row[1] for row in classes_data_db}
+
+    if classes_data:
+        return jsonify(classes_data)
+    else:
+        return jsonify({"error": "No classes found"}), 404
+
+

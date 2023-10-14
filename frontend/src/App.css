@@ -365,6 +365,7 @@ h3 {
 .selected-border.MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
   border-color: var(--primary-text);
 }
+
 .selected-border.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
   border-color: var(--primary-text);
 }
