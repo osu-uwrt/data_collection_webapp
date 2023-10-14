@@ -616,6 +616,7 @@ function VideoPage() {
                 onToggleInterpolation={toggleInterpolation}
                 onChangeDisplayOrder={onChangeDisplayOrder}
                 onToggleVisibility={toggleBoxVisibility}
+                selected={selected}
               />
             </div>
           </div>

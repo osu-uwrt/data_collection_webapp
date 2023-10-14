@@ -101,7 +101,7 @@ body {
   justify-content: center;
   align-items: flex-start;
   position: relative;
-  width: calc(100% - 300px);
+  width: calc(100% - 350px);
 }
 
 #video-page {
@@ -130,7 +130,7 @@ body {
   overflow: visible;
   background-color: var(--secondary-bg);
   flex: 2;
-  max-width: 300px;
+  max-width: 350px;
 }
 
 .frame-count-controls button {
@@ -333,7 +333,7 @@ h3 {
 }
 
 .right-header-sidebar {
-  flex-basis: 300px;
+  flex-basis: 350px;
 }
 
 .label-menu {
@@ -354,6 +354,19 @@ h3 {
 
 .large-select .MuiSelect-select {
   color: var(--primary-text);
+}
+
+/* Default border color, e.g. gray */
+.large-select.MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+  border-color: var(--primary-bg);
+}
+
+/* Border color when selected */
+.selected-border.MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+  border-color: var(--primary-text);
+}
+.selected-border.MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--primary-text);
 }
 
 .MuiMenu-paper .MuiPaper-root {

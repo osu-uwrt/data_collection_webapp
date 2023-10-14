@@ -14,6 +14,7 @@ const LabelMenu = ({
   onToggleInterpolation,
   onChangeDisplayOrder,
   onToggleVisibility,
+  selected,
 }) => {
   const handleClassChange = (index, newClass) => {
     onClassChange(index, newClass);
@@ -59,6 +60,7 @@ const LabelMenu = ({
   };
 
   const handleVisibilityToggle = (index) => {
+    console.log(boundingBoxes[currentFrame][selected]);
     onToggleVisibility(index);
   };
 
@@ -141,7 +143,11 @@ const LabelMenu = ({
               onChange={(e) => handleClassChange(index, e.target.value)}
               variant="outlined"
               size="small"
-              className="label-menu-select large-select"
+              className={`label-menu-select large-select ${
+                box === boundingBoxes[currentFrame][selected]
+                  ? "selected-border"
+                  : ""
+              }`}
             >
               {Object.keys(boxClasses).map((boxClass) => (
                 <MenuItem key={boxClass} value={boxClass}>
