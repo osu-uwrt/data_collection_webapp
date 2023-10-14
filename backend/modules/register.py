@@ -30,14 +30,22 @@ def register():
     if not username or not password or not email:
         return jsonify({"msg": "Missing username, password, or email"}), 400
 
-    # Check if user already exists
     conn = get_db_conn()
     c = conn.cursor()
+
+    # Check if user already exists based on username
     c.execute('SELECT username FROM Users WHERE username = ?', (username,))
     existing_user = c.fetchone()
     if existing_user:
         conn.close()
-        return jsonify({"msg": "User already exists"}), 400
+        return jsonify({"msg": "Username already taken"}), 400
+
+    # Check if email already exists
+    c.execute('SELECT email FROM Users WHERE email = ?', (email,))
+    existing_email = c.fetchone()
+    if existing_email:
+        conn.close()
+        return jsonify({"msg": "Email already in use"}), 400
 
     # Hash the password and save to DB
     hashed_password = generate_password_hash(password, method='sha256')

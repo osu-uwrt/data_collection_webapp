@@ -31,14 +31,13 @@ function Alert(props) {
   return <MuiAlert elevation={6} variant="filled" {...props} />;
 }
 
-export default function Register() {
+export default function Login() {
   const classes = useStyles();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     username: "",
     password: "",
-    email: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -78,10 +77,6 @@ export default function Register() {
         "Password must be at least 8 characters and contain a mix of letters and numbers";
     }
 
-    if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = "Email must be a valid email format";
-    }
-
     setError(errors);
     return Object.keys(errors).length === 0;
   };
@@ -90,7 +85,7 @@ export default function Register() {
     e.preventDefault();
 
     if (validate()) {
-      const response = await fetch(`${BASE_URL}/register`, {
+      const response = await fetch(`${BASE_URL}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -100,8 +95,12 @@ export default function Register() {
 
       const responseData = await response.json();
 
-      if (response.status === 201) {
-        showSnackbar("User registered successfully!", "success");
+      if (response.status === 200) {
+        // Store the token securely (e.g., in an HTTP-only cookie or local storage)
+        // For this example, we're using local storage
+        localStorage.setItem("token", responseData.token);
+
+        showSnackbar("Login successful!", "success");
         setTimeout(() => {
           navigate("/");
         }, 2000);
@@ -118,7 +117,7 @@ export default function Register() {
 
   return (
     <Container component="main" maxWidth="xs">
-      <Typography variant="h5">Register</Typography>
+      <Typography variant="h5">Login</Typography>
       <form onSubmit={handleSubmit}>
         <TextField
           variant="outlined"
@@ -134,34 +133,6 @@ export default function Register() {
           onChange={handleChange}
           error={!!error.username}
           helperText={error.username}
-          style={{ color: "white" }}
-          InputProps={{
-            style: {
-              color: "white",
-            },
-            classes: {
-              notchedOutline: classes.whiteBorder,
-            },
-          }}
-          InputLabelProps={{
-            style: {
-              color: "white",
-            },
-          }}
-        />
-        <TextField
-          variant="outlined"
-          margin="normal"
-          required
-          fullWidth
-          name="email"
-          label="Email Address"
-          id="email"
-          autoComplete="email"
-          value={formData.email}
-          onChange={handleChange}
-          error={!!error.email}
-          helperText={error.email}
           style={{ color: "white" }}
           InputProps={{
             style: {
@@ -222,7 +193,7 @@ export default function Register() {
           }}
         />
         <Button type="submit" fullWidth variant="contained" color="primary">
-          Register
+          Login
         </Button>
       </form>
       <Snackbar

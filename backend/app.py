@@ -8,6 +8,7 @@ import pages.video
 import modules.video_serving
 import modules.bbox_processing
 import modules.register
+import modules.login
 from modules.video_processing import get_uploaded_videos
 
 # Move the app configurations to the top
