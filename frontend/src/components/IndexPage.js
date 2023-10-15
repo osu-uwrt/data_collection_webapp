@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { IconButton, Menu, MenuItem, Typography } from "@mui/material";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import "../App.css";
@@ -22,6 +22,9 @@ function Alert(props) {
 
 function IndexPage() {
   const [videos, setVideos] = useState([]);
+  const [teamId, setTeamId] = useState(null);
+  const [teamName, setTeamName] = useState("");
+  const [token, setToken] = useState(null);
   const [username, setUsername] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null); // For controlling the dropdown
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -44,18 +47,36 @@ function IndexPage() {
     };
 
     // Decode the token and set the username
-    const token = localStorage.getItem("token");
+    setToken(localStorage.getItem("token"));
     if (token) {
       try {
         const decoded = jwt_decode(token);
         setUsername(decoded.username);
+        setTeamId(decoded.team_id);
+
+        (async () => {
+          try {
+            const response = await fetch(
+              `${BASE_URL}/teams/${decoded.team_id}`
+            );
+            if (response.ok) {
+              const data = await response.json();
+              console.log(data);
+              setTeamName(data.team_name.toLowerCase().replace(/ /g, "_"));
+            } else {
+              console.error("Error fetching team name:", response.statusText);
+            }
+          } catch (err) {
+            console.error("Network error fetching team name:", err);
+          }
+        })();
       } catch (error) {
         console.error("Error decoding token:", error);
       }
     }
 
     fetchVideos().then(() => setIsLoading(false));
-  }, []);
+  }, [token]);
 
   const handleLogout = () => {
     localStorage.removeItem("token"); // Remove JWT token from local storage
@@ -86,9 +107,31 @@ function IndexPage() {
             style={{ height: "50px", float: "left" }}
           />
         </div>
-        <h2 className="header-title" style={{ margin: "0", color: "white" }}>
-          Videos
-        </h2>
+        <Typography fontSize="large">
+          <NavLink
+            to="/"
+            exact
+            activeClassName="active-link"
+            style={{ color: "white", marginRight: "32px" }}
+          >
+            Home
+          </NavLink>
+          <NavLink
+            to="/teams"
+            activeClassName="active-link"
+            style={{ color: "white", marginRight: "32px" }}
+          >
+            Teams
+          </NavLink>
+          <NavLink
+            to={`/${teamName}`}
+            activeClassName="active-link"
+            style={{ color: "white", marginRight: "32px" }}
+          >
+            My Team
+          </NavLink>
+        </Typography>
+
         <div className="header-right">
           {!isLoading && (
             <div style={{ float: "right" }}>
@@ -97,6 +140,7 @@ function IndexPage() {
                   <span style={{ color: "white", marginRight: "8px" }}>
                     {username}
                   </span>
+
                   <IconButton
                     aria-label="account of current user"
                     aria-controls="menu-appbar"

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, NavLink } from "react-router-dom";
 import {
   IconButton,
   Menu,
@@ -28,6 +28,7 @@ function Alert(props) {
 }
 
 function TeamsPage() {
+  const [teamName, setTeamName] = useState(null);
   const [teamId, setTeamId] = useState(null);
   const [teams, setTeams] = useState([]);
   const [username, setUsername] = useState(null);
@@ -60,6 +61,24 @@ function TeamsPage() {
         const decoded = jwt_decode(token);
         setUsername(decoded.username);
         setTeamId(decoded.team_id);
+
+        (async () => {
+          try {
+            const response = await fetch(
+              `${BASE_URL}/teams/${decoded.team_id}`
+            );
+            if (response.ok) {
+              const data = await response.json();
+              console.log(data);
+              setTeamName(data.team_name.toLowerCase().replace(/ /g, "_"));
+            } else {
+              console.error("Error fetching team name:", response.statusText);
+            }
+          } catch (err) {
+            console.error("Network error fetching team name:", err);
+          }
+        })();
+
         console.log(decoded);
       } catch (error) {
         console.error("Error decoding token:", error);
@@ -67,7 +86,7 @@ function TeamsPage() {
     }
 
     fetchTeams().then(() => setIsLoading(false));
-  }, []);
+  }, [teamName]);
 
   const handleAddTeamClick = () => {
     navigate("/add-team");
@@ -112,9 +131,30 @@ function TeamsPage() {
             />
           </Link>
         </div>
-        <h2 className="header-title" style={{ margin: "0", color: "white" }}>
-          Teams
-        </h2>
+        <Typography fontSize="large">
+          <NavLink
+            to="/"
+            exact
+            activeClassName="active-link"
+            style={{ color: "white", marginRight: "32px" }}
+          >
+            Home
+          </NavLink>
+          <NavLink
+            to="/teams"
+            activeClassName="active-link"
+            style={{ color: "white", marginRight: "32px" }}
+          >
+            Teams
+          </NavLink>
+          <NavLink
+            to={`/${teamName}`}
+            activeClassName="active-link"
+            style={{ color: "white", marginRight: "32px" }}
+          >
+            My Team
+          </NavLink>
+        </Typography>
         <div className="header-right">
           {!isLoading && (
             <div style={{ float: "right" }}>

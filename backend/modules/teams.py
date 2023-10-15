@@ -33,3 +33,20 @@ def serve_team_image(team_id, filename):
         abort(404)
     
     return send_from_directory(directory_path, filename)
+
+@app.route('/teams/<int:team_id>', methods=['GET'])
+def get_team_by_id(team_id):
+    conn = get_db_conn()
+    cursor = conn.cursor()
+    cursor.execute("SELECT team_id, team_name_display, thumbnail FROM Team WHERE team_id = ?", (team_id,))
+    team = cursor.fetchone()
+    conn.close()
+
+    # If team does not exist, return 404
+    if team is None:
+        abort(404)
+
+    # Convert the team tuple to a dictionary for JSON serialization
+    team_dict = {"team_id": team[0], "team_name": team[1], "thumbnail": team[2]}
+    
+    return jsonify(team_dict)

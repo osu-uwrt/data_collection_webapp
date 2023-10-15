@@ -504,6 +504,16 @@ h3 {
   transform: translateX(-50%);
 }
 
+.minimalist-header a:hover {
+  text-decoration: underline;
+}
+
+.minimalist-header a.active {
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.1),
+    0 0 10px rgba(255, 255, 255, 0.1);
+  font-weight: bold;
+}
+
 .team-list {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -544,13 +554,25 @@ h3 {
   transition: transform 0.3s ease-in-out;
 }
 
-.team-item:hover .team-thumbnail img {
-  transform: scale(1.1);
-}
-
 .team-name {
   text-align: center;
   padding: 10px;
   font-weight: 500;
   color: #bbb;
+}
+
+.team-logo {
+  width: 45px; /* Adjust as needed */
+  height: 45px;
+  border-radius: 100%;
+  overflow: hidden; /* ensures that the image does not spill out of the circular button */
+  border: 10px solid white; /* adds a 2px white border */
+}
+
+.team-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%; /* ensures the image itself is also circular */
+  border: 0.1px solid var(--ui-disabled);
 }
