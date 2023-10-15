@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import { IconButton, Menu, MenuItem } from "@mui/material";
+import { IconButton, Menu, MenuItem, Typography } from "@mui/material";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import "../App.css";
 import Snackbar from "@mui/material/Snackbar";
@@ -27,6 +27,7 @@ function IndexPage() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchVideos = async () => {
@@ -53,7 +54,7 @@ function IndexPage() {
       }
     }
 
-    fetchVideos();
+    fetchVideos().then(() => setIsLoading(false));
   }, []);
 
   const handleLogout = () => {
@@ -89,51 +90,70 @@ function IndexPage() {
           Videos
         </h2>
         <div className="header-right">
-          <div style={{ float: "right" }}>
-            {username ? (
-              <>
-                <span style={{ color: "white", marginRight: "8px" }}>
-                  {username}
-                </span>
-                <IconButton
-                  aria-label="account of current user"
-                  aria-controls="menu-appbar"
-                  aria-haspopup="true"
-                  onClick={handleMenuOpen}
-                  style={{ color: "white" }}
-                >
-                  <AccountCircle fontSize="large" />
-                </IconButton>
-                <Menu
-                  anchorEl={anchorEl}
-                  keepMounted
-                  open={Boolean(anchorEl)}
-                  onClose={handleMenuClose}
-                >
-                  <MenuItem onClick={handleMenuClose}>
-                    <Link to="/settings">Settings</Link>
-                  </MenuItem>
-                  <MenuItem onClick={handleMenuClose}>
-                    <Link to="/teams">Teams</Link>
-                  </MenuItem>
-                  <MenuItem onClick={handleLogout}>Logout</MenuItem>
-                </Menu>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="auth-text-link"
-                  style={{ marginRight: "16px" }}
-                >
-                  Login
-                </Link>
-                <Link to="/register" className="auth-text-link">
-                  Register
-                </Link>
-              </>
-            )}
-          </div>
+          {!isLoading && (
+            <div style={{ float: "right" }}>
+              {username ? (
+                <>
+                  <span style={{ color: "white", marginRight: "8px" }}>
+                    {username}
+                  </span>
+                  <IconButton
+                    aria-label="account of current user"
+                    aria-controls="menu-appbar"
+                    aria-haspopup="true"
+                    onClick={handleMenuOpen}
+                    style={{ color: "white" }}
+                  >
+                    <AccountCircle fontSize="large" />
+                  </IconButton>
+                  <Menu
+                    anchorEl={anchorEl}
+                    keepMounted
+                    open={Boolean(anchorEl)}
+                    onClose={handleMenuClose}
+                  >
+                    <MenuItem onClick={handleMenuClose}>
+                      <Typography
+                        component={Link}
+                        to="/settings"
+                        sx={{
+                          textDecoration: "none",
+                          color: "black",
+                        }}
+                      >
+                        Settings
+                      </Typography>
+                    </MenuItem>
+                    <MenuItem onClick={handleMenuClose}>
+                      <Typography
+                        component={Link}
+                        to="/teams"
+                        sx={{ textDecoration: "none", color: "black" }}
+                      >
+                        Teams
+                      </Typography>
+                    </MenuItem>
+                    <MenuItem>
+                      <Typography onClick={handleLogout}>Logout</Typography>
+                    </MenuItem>
+                  </Menu>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="auth-text-link"
+                    style={{ marginRight: "16px" }}
+                  >
+                    Login
+                  </Link>
+                  <Link to="/register" className="auth-text-link">
+                    Register
+                  </Link>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
       <div className="video-list">

@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory, abort
 import sqlite3
 import os
 from app_instance import app
@@ -20,3 +20,15 @@ def get_teams():
     teams_list = [{"team_id": t[0], "team_name": t[1], "thumbnail": t[2]} for t in teams]
     
     return jsonify(teams_list)
+
+@app.route('/data/teams/<int:team_id>/<filename>')
+def serve_team_image(team_id, filename):
+    directory_path = os.path.join(app.root_path, 'data', 'teams', str(team_id))
+    
+    # Check if the file exists
+    full_path = os.path.join(directory_path, filename)
+    if not os.path.exists(full_path):
+        print(f"File not found: {full_path}")
+        abort(404)
+    
+    return send_from_directory(directory_path, filename)

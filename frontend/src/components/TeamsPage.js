@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
-import { IconButton, Menu, MenuItem } from "@mui/material";
+import { IconButton, Menu, MenuItem, Typography } from "@mui/material";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import jwt_decode from "jwt-decode";
 import "../App.css";
@@ -9,6 +9,7 @@ import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 import Slide from "@mui/material/Slide";
 import logo from "../logo.svg";
+import AddIcon from "@mui/icons-material/Add";
 
 const BASE_URL = process.env.REACT_APP_BASE_URL;
 
@@ -27,6 +28,7 @@ function TeamsPage() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [isLoading, setIsLoading] = useState(true);
 
   const navigate = useNavigate();
 
@@ -55,8 +57,16 @@ function TeamsPage() {
       }
     }
 
-    fetchTeams();
+    fetchTeams().then(() => setIsLoading(false));
   }, []);
+
+  const handleAddTeamClick = () => {
+    navigate("/add-team");
+  };
+
+  const formatTeamNameForURL = (teamName) => {
+    return teamName.replace(/ /g, "_");
+  };
 
   const showSnackbar = (message, severity = "success") => {
     setSnackbarMessage(message);
@@ -97,61 +107,86 @@ function TeamsPage() {
           Teams
         </h2>
         <div className="header-right">
-          <div style={{ float: "right" }}>
-            {username ? (
-              <>
-                <span style={{ color: "white", marginRight: "8px" }}>
-                  {username}
-                </span>
-                <IconButton
-                  aria-label="account of current user"
-                  aria-controls="menu-appbar"
-                  aria-haspopup="true"
-                  onClick={handleMenuOpen}
-                  style={{ color: "white" }}
-                >
-                  <AccountCircle fontSize="large" />
-                </IconButton>
-                <Menu
-                  anchorEl={anchorEl}
-                  keepMounted
-                  open={Boolean(anchorEl)}
-                  onClose={handleMenuClose}
-                >
-                  <MenuItem onClick={handleMenuClose}>
-                    <Link to="/settings">Settings</Link>
-                  </MenuItem>
-                  <MenuItem onClick={handleMenuClose}>
-                    <Link to="/teams">Teams</Link>
-                  </MenuItem>
-                  <MenuItem onClick={handleLogout}>Logout</MenuItem>
-                </Menu>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="auth-text-link"
-                  style={{ marginRight: "16px" }}
-                >
-                  Login
-                </Link>
-                <Link to="/register" className="auth-text-link">
-                  Register
-                </Link>
-              </>
-            )}
-          </div>
+          {!isLoading && (
+            <div style={{ float: "right" }}>
+              {username ? (
+                <>
+                  <span style={{ color: "white", marginRight: "8px" }}>
+                    {username}
+                  </span>
+                  <IconButton
+                    aria-label="account of current user"
+                    aria-controls="menu-appbar"
+                    aria-haspopup="true"
+                    onClick={handleMenuOpen}
+                    style={{ color: "white" }}
+                  >
+                    <AccountCircle fontSize="large" />
+                  </IconButton>
+                  <Menu
+                    anchorEl={anchorEl}
+                    keepMounted
+                    open={Boolean(anchorEl)}
+                    onClose={handleMenuClose}
+                  >
+                    <MenuItem onClick={handleMenuClose}>
+                      <Typography
+                        component={Link}
+                        to="/settings"
+                        sx={{
+                          textDecoration: "none",
+                          color: "black",
+                        }}
+                      >
+                        Settings
+                      </Typography>
+                    </MenuItem>
+                    <MenuItem onClick={handleMenuClose}>
+                      <Typography
+                        component={Link}
+                        to="/teams"
+                        sx={{ textDecoration: "none", color: "black" }}
+                      >
+                        Teams
+                      </Typography>
+                    </MenuItem>
+                    <MenuItem>
+                      <Typography onClick={handleLogout}>Logout</Typography>
+                    </MenuItem>
+                  </Menu>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    className="auth-text-link"
+                    style={{ marginRight: "16px" }}
+                  >
+                    Login
+                  </Link>
+                  <Link to="/register" className="auth-text-link">
+                    Register
+                  </Link>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
       <div className="team-list">
         {teams.map((team) => (
           <div key={team.team_id} className="team-item">
-            <Link to={`/team/${team.team_id}`} className="team-link">
+            <Link
+              to={`/${formatTeamNameForURL(team.team_name)}`}
+              className="team-link"
+            >
               <div className="team-thumbnail">
-                {/* Adjust the path or use a default thumbnail */}
                 <img
-                  src={team.thumbnail || "path_to_default_thumbnail"}
+                  src={
+                    team.thumbnail
+                      ? `${BASE_URL}/data/teams/${team.team_id}/${team.thumbnail}`
+                      : "path_to_default_thumbnail"
+                  }
                   alt={`Team ${team.team_name}`}
                 />
               </div>
@@ -159,7 +194,24 @@ function TeamsPage() {
             </Link>
           </div>
         ))}
+        {/* "Add a Team" option */}
+        <div className="team-item">
+          <Link to="/add-team" className="team-link">
+            <div
+              className="team-thumbnail"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <AddIcon style={{ fontSize: "5em", color: "#aaa" }} />
+            </div>
+            <p className="team-name">Add Team</p>
+          </Link>
+        </div>
       </div>
+
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
