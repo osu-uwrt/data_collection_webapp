@@ -62,3 +62,47 @@ def register():
     conn.close()
 
     return jsonify({"msg": "User registered successfully"}), 201
+
+@app.route('/register-team', methods=['OPTIONS'])
+def team_register_options():
+    return '', 200, {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST',
+        'Access-Control-Allow-Headers': 'Content-Type',
+    }
+
+@app.route('/register-team', methods=['POST'])
+def team_register():
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request"}), 400
+    print(request)
+    team_name_reference = request.json.get('team_name_reference', None)
+    team_name_display = request.json.get('team_name_display', None)
+    owner_id = request.json.get('owner_id', None)
+    
+    if not team_name_reference or not team_name_display or not owner_id:
+        return jsonify({"msg": "Missing team_name_reference, team_name_display, or owner_id"}), 400
+
+    # Convert team_name_reference to lowercase
+    team_name_reference = team_name_reference.lower()
+
+    conn = get_db_conn()
+    c = conn.cursor()
+
+    # Check if team name reference already exists
+    c.execute('SELECT team_name_reference FROM Team WHERE team_name_reference = ?', (team_name_reference,))
+    existing_team = c.fetchone()
+    if existing_team:
+        conn.close()
+        return jsonify({"msg": "Team name already taken"}), 400
+
+    # Insert the new team into DB
+    c.execute('''
+        INSERT INTO Team (team_name_reference, team_name_display, owner_id)
+        VALUES (?, ?, ?)
+    ''', (team_name_reference, team_name_display, owner_id))
+    
+    conn.commit()
+    conn.close()
+
+    return jsonify({"msg": "Team registered successfully"}), 201

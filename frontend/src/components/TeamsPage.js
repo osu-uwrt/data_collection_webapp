@@ -28,6 +28,7 @@ function Alert(props) {
 }
 
 function TeamsPage() {
+  const [teamId, setTeamId] = useState(null);
   const [teams, setTeams] = useState([]);
   const [username, setUsername] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null); // For controlling the dropdown
@@ -58,6 +59,8 @@ function TeamsPage() {
       try {
         const decoded = jwt_decode(token);
         setUsername(decoded.username);
+        setTeamId(decoded.team_id);
+        console.log(decoded);
       } catch (error) {
         console.error("Error decoding token:", error);
       }
@@ -203,22 +206,23 @@ function TeamsPage() {
                   </Link>
                 </div>
               ))}
-              {/* "Add a Team" option */}
-              <div className="team-item">
-                <Link to="/add-team" className="team-link">
-                  <div
-                    className="team-thumbnail"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <AddIcon style={{ fontSize: "5em", color: "#aaa" }} />
-                  </div>
-                  <p className="team-name">Add Team</p>
-                </Link>
-              </div>
+              {!teamId && (
+                <div className="team-item">
+                  <Link to="/register-team" className="team-link">
+                    <div
+                      className="team-thumbnail"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <AddIcon style={{ fontSize: "5em", color: "#aaa" }} />
+                    </div>
+                    <p className="team-name">Add Team</p>
+                  </Link>
+                </div>
+              )}
             </div>
           ) : (
             <Container

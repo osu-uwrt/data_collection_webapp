@@ -4,6 +4,7 @@ import IndexPage from "./components/IndexPage";
 import Register from "./components/Register";
 import Login from "./components/Login";
 import TeamsPage from "./components/TeamsPage";
+import RegisterTeam from "./components/RegisterTeam";
 import React from "react";
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/teams" element={<TeamsPage />} />
+        <Route path="/register-team" element={<RegisterTeam />} />
       </Routes>
     </Router>
   );
