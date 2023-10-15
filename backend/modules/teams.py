@@ -50,3 +50,39 @@ def get_team_by_id(team_id):
     team_dict = {"team_id": team[0], "team_name": team[1], "thumbnail": team[2]}
     
     return jsonify(team_dict)
+
+@app.route('/team/<int:team_id>/videos', methods=['GET'])
+def get_videos_for_team(team_id):
+    conn = get_db_conn()
+    cursor = conn.cursor()
+
+    # Assuming you have a video table with a foreign key column for the team_id
+    cursor.execute("SELECT video_id, video_name FROM Video WHERE team_id = ?", (team_id,))
+    videos = cursor.fetchall()
+    
+    conn.close()
+
+    # Convert the videos to a list of dictionaries for JSON serialization
+    videos_list = [{"video_id": v[0], "video_name": v[1]} for v in videos]
+    
+    return jsonify(videos_list)
+
+@app.route('/team/name/<string:team_name_reference>', methods=['GET'])
+def get_team_by_name(team_name_reference):
+    conn = get_db_conn()
+    cursor = conn.cursor()
+
+    # Fetch the team based on the team_name_reference
+    cursor.execute("SELECT team_id FROM Team WHERE team_name_reference = ?", (team_name_reference,))
+    team = cursor.fetchone()
+
+    conn.close()
+
+    # If the team does not exist based on the team_name_reference, return a 404
+    if team is None:
+        abort(404)
+
+    # Convert the team tuple to a dictionary for JSON serialization
+    team_dict = {"team_id": team[0]}
+    
+    return jsonify(team_dict)

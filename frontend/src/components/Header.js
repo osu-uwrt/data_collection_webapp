@@ -1,7 +1,7 @@
 import React from "react";
 import { IconButton, Typography, Menu, MenuItem } from "@mui/material";
 import AccountCircle from "@mui/icons-material/AccountCircle";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import logo from "../logo.svg";
 import { useAppContext } from "./AppContext";
 
@@ -11,7 +11,6 @@ const Header = ({
   handleMenuClose,
   handleLogout,
 }) => {
-  const navigate = useNavigate();
   const { teamName, username } = useAppContext();
 
   return (

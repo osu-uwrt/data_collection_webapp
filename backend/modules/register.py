@@ -84,7 +84,8 @@ def team_register():
         return jsonify({"msg": "Missing team_name_reference, team_name_display, or owner_id"}), 400
 
     # Convert team_name_reference to lowercase
-    team_name_reference = team_name_reference.lower()
+    team_name_reference = team_name_reference.lower().replace(" ", "_")
+
 
     conn = get_db_conn()
     c = conn.cursor()

@@ -185,18 +185,18 @@ function VideoPage() {
           videoResponse.data.video_height,
           localScale
         );
+
+        for (let i = 0; i < videoResponse.data.total_frames; i++) {
+          if (boxesData[i] === undefined) {
+            setFrameBoxes((prev) => ({
+              ...prev,
+              [i]: [],
+            }));
+          }
+        }
         setFrameBoxes(boxesData);
       } catch (error) {
         console.error("Failed to fetch boxes data:", error);
-      }
-
-      for (let i = 0; i < videoResponse.data.total_frames; i++) {
-        if (frameBoxes[i] === undefined) {
-          setFrameBoxes((prev) => ({
-            ...prev,
-            [i]: [],
-          }));
-        }
       }
     } catch (error) {
       console.error("Failed to fetch video data:", error);

@@ -1,7 +1,17 @@
-Add users 
-Add teams
-Add home button on VideoPage
-Refactor BBox to use local ref for frame
-Add logo
+Fix JWT to update on Register so user doesnt need to re login
+Fix JWT to update on register Team
+Work on team dashboard
+Upload video
+Team owner controls
+Team admins?
+Team collab
+
+
+
+Undo/Redo on BBox
+
+
+
+
 file sharing?
 zipping processed files?

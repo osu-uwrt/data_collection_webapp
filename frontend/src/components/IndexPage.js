@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from "react";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
-import { Link, NavLink } from "react-router-dom";
-import { IconButton, Menu, MenuItem, Typography } from "@mui/material";
-import AccountCircle from "@mui/icons-material/AccountCircle";
+import { Link } from "react-router-dom";
 import "../App.css";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 import Slide from "@mui/material/Slide";
-import logo from "../logo.svg";
 import Header from "./Header";
 import { useAppContext } from "./AppContext";
 
@@ -45,6 +42,12 @@ function IndexPage() {
       } catch (error) {
         console.error("Error fetching videos:", error);
       }
+    };
+
+    const showSnackbar = (message, severity = "success") => {
+      setSnackbarMessage(message);
+      setSnackbarSeverity(severity);
+      setSnackbarOpen(true);
     };
 
     // Decode the token and set the username

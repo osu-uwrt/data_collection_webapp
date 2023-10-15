@@ -5,6 +5,7 @@ import Register from "./components/Register";
 import Login from "./components/Login";
 import TeamsPage from "./components/TeamsPage";
 import RegisterTeam from "./components/RegisterTeam";
+import TeamDashboard from "./components/TeamDashboard";
 import React from "react";
 import { AppProvider } from "./components/AppContext";
 
@@ -19,6 +20,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/teams" element={<TeamsPage />} />
           <Route path="/register-team" element={<RegisterTeam />} />
+          <Route path="/:pageTeamName" element={<TeamDashboard />} />
         </Routes>
       </Router>
     </AppProvider>

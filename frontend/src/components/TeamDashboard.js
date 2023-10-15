@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
-import { Typography, Container } from "@mui/material";
 import jwt_decode from "jwt-decode";
+import axios from "axios";
+import { Link, useParams } from "react-router-dom";
 import "../App.css";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 import Slide from "@mui/material/Slide";
-import AddIcon from "@mui/icons-material/Add";
 import Header from "./Header";
 import { useAppContext } from "./AppContext";
 
@@ -21,40 +19,55 @@ function Alert(props) {
   return <MuiAlert elevation={6} variant="filled" {...props} />;
 }
 
-function TeamsPage() {
-  const { teamName, setTeamName, username, setUsername } = useAppContext();
-  const [teamId, setTeamId] = useState(null);
-  const [teams, setTeams] = useState([]);
+function TeamDashboard() {
+  const [videos, setVideos] = useState([]);
+  const [token, setToken] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null); // For controlling the dropdown
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [teamId, setTeamId] = useState(null);
 
-  const navigate = useNavigate();
+  const { pageTeamName } = useParams();
+  const { teamName, setTeamName, username, setUsername } = useAppContext();
 
   useEffect(() => {
-    const fetchTeams = async () => {
+    const fetchTeamVideos = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/teams`);
+        const response = await axios.get(`${BASE_URL}/team/${teamId}/videos`);
         if (Array.isArray(response.data)) {
-          setTeams(response.data);
+          setVideos(response.data);
         } else {
           console.error("Unexpected response structure:", response.data);
         }
       } catch (error) {
-        console.error("Error fetching teams:", error);
+        console.error("Error fetching videos:", error);
+      }
+    };
+
+    const fetchTeamId = async () => {
+      try {
+        const response = await axios.get(
+          `${BASE_URL}/team/name/${pageTeamName}`
+        );
+        if (response.data && response.data.team_id) {
+          setTeamId(response.data.team_id);
+        } else {
+          console.error("Unexpected response structure:", response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching team ID:", error);
       }
     };
 
     // Decode the token and set the username
-    const token = localStorage.getItem("token");
+    setToken(localStorage.getItem("token"));
     if (token) {
       try {
         const decoded = jwt_decode(token);
         if (username !== decoded.username) {
           setUsername(decoded.username);
         }
-        setTeamId(decoded.team_id);
 
         (async () => {
           try {
@@ -76,16 +89,13 @@ function TeamsPage() {
       }
     }
 
-    fetchTeams();
-  }, [teamName]);
+    fetchTeamId();
+    console.log(teamId);
 
-  const handleAddTeamClick = () => {
-    navigate("/add-team");
-  };
-
-  const formatTeamNameForURL = (teamName) => {
-    return teamName.toLowerCase().replace(/ /g, "_");
-  };
+    if (teamId) {
+      fetchTeamVideos();
+    }
+  }, [token, teamId]);
 
   const showSnackbar = (message, severity = "success") => {
     setSnackbarMessage(message);
@@ -99,7 +109,9 @@ function TeamsPage() {
     setTeamName(null);
     setAnchorEl(null); // Close the dropdown menu
 
-    navigate("/");
+    setSnackbarMessage("Successfully logged out!");
+    setSnackbarSeverity("success");
+    setSnackbarOpen(true);
   };
 
   // Handle dropdown menu actions
@@ -120,80 +132,21 @@ function TeamsPage() {
         handleMenuClose={handleMenuClose}
         handleLogout={handleLogout}
       />
-      {username ? (
-        <div className="team-list">
-          {teams.map((team) => (
-            <div key={team.team_id} className="team-item">
-              <Link
-                to={`/${formatTeamNameForURL(team.team_name)}`}
-                className="team-link"
-              >
-                <div className="team-thumbnail">
-                  <img
-                    src={
-                      team.thumbnail
-                        ? `${BASE_URL}/data/teams/${team.team_id}/${team.thumbnail}`
-                        : "path_to_default_thumbnail"
-                    }
-                    alt={`Team ${team.team_name}`}
-                  />
-                </div>
-                <p className="team-name">{team.team_name}</p>
-              </Link>
-            </div>
-          ))}
-          {!teamId && (
-            <div className="team-item">
-              <Link to="/register-team" className="team-link">
-                <div
-                  className="team-thumbnail"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <AddIcon style={{ fontSize: "5em", color: "#aaa" }} />
-                </div>
-                <p className="team-name">Add Team</p>
-              </Link>
-            </div>
-          )}
-        </div>
-      ) : (
-        <Container
-          component="main"
-          maxWidth="xs"
-          style={{ marginTop: "10%", textAlign: "center" }}
-        >
-          <Typography variant="h5">
-            You need an account to see the teams.
-          </Typography>
-          <Typography
-            variant="body2"
-            style={{
-              marginTop: 16,
-            }}
-          >
-            Sign up now{" "}
-            <Link to="/register" style={{ textDecoration: "underline" }}>
-              Register
+      <div className="video-list">
+        {videos.map((video) => (
+          <div key={video.video_id} className="video-item">
+            <Link to={`/video/${video.video_id}`} className="video-link">
+              <div className="video-thumbnail">
+                <img
+                  src={`${BASE_URL}/data/frames/${video.video_id}/frame0.jpg`}
+                  alt={`First frame of ${video.video_name}`}
+                />
+              </div>
+              <p className="video-name">{video.video_name}</p>
             </Link>
-          </Typography>
-          <Typography
-            variant="body2"
-            style={{
-              marginTop: 16,
-            }}
-          >
-            Already have an account?{" "}
-            <Link to="/login" style={{ textDecoration: "underline" }}>
-              Login
-            </Link>
-          </Typography>
-        </Container>
-      )}
-
+          </div>
+        ))}
+      </div>
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
@@ -214,4 +167,4 @@ function TeamsPage() {
   );
 }
 
-export default TeamsPage;
+export default TeamDashboard;
