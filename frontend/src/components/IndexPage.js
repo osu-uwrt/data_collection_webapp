@@ -9,6 +9,8 @@ import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 import Slide from "@mui/material/Slide";
 import logo from "../logo.svg";
+import Header from "./Header";
+import { useAppContext } from "./AppContext";
 
 const BASE_URL = process.env.REACT_APP_BASE_URL;
 
@@ -23,14 +25,13 @@ function Alert(props) {
 function IndexPage() {
   const [videos, setVideos] = useState([]);
   const [teamId, setTeamId] = useState(null);
-  const [teamName, setTeamName] = useState("");
   const [token, setToken] = useState(null);
-  const [username, setUsername] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null); // For controlling the dropdown
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
-  const [isLoading, setIsLoading] = useState(true);
+
+  const { teamName, setTeamName, username, setUsername } = useAppContext();
 
   useEffect(() => {
     const fetchVideos = async () => {
@@ -51,7 +52,9 @@ function IndexPage() {
     if (token) {
       try {
         const decoded = jwt_decode(token);
-        setUsername(decoded.username);
+        if (username !== decoded.username) {
+          setUsername(decoded.username);
+        }
         setTeamId(decoded.team_id);
 
         (async () => {
@@ -61,7 +64,6 @@ function IndexPage() {
             );
             if (response.ok) {
               const data = await response.json();
-              console.log(data);
               setTeamName(data.team_name.toLowerCase().replace(/ /g, "_"));
             } else {
               console.error("Error fetching team name:", response.statusText);
@@ -75,7 +77,7 @@ function IndexPage() {
       }
     }
 
-    fetchVideos().then(() => setIsLoading(false));
+    fetchVideos();
   }, [token]);
 
   const handleLogout = () => {
@@ -99,107 +101,13 @@ function IndexPage() {
 
   return (
     <div className="index-page">
-      <div className="minimalist-header">
-        <div className="header-left">
-          <img
-            src={logo}
-            alt="Your Logo"
-            style={{ height: "50px", float: "left" }}
-          />
-        </div>
-        <Typography fontSize="large">
-          <NavLink
-            to="/"
-            exact
-            activeClassName="active-link"
-            style={{ color: "white", marginRight: "32px" }}
-          >
-            Home
-          </NavLink>
-          <NavLink
-            to="/teams"
-            activeClassName="active-link"
-            style={{ color: "white", marginRight: "32px" }}
-          >
-            Teams
-          </NavLink>
-          <NavLink
-            to={`/${teamName}`}
-            activeClassName="active-link"
-            style={{ color: "white", marginRight: "32px" }}
-          >
-            My Team
-          </NavLink>
-        </Typography>
-
-        <div className="header-right">
-          {!isLoading && (
-            <div style={{ float: "right" }}>
-              {username ? (
-                <>
-                  <span style={{ color: "white", marginRight: "8px" }}>
-                    {username}
-                  </span>
-
-                  <IconButton
-                    aria-label="account of current user"
-                    aria-controls="menu-appbar"
-                    aria-haspopup="true"
-                    onClick={handleMenuOpen}
-                    style={{ color: "white" }}
-                  >
-                    <AccountCircle fontSize="large" />
-                  </IconButton>
-                  <Menu
-                    anchorEl={anchorEl}
-                    keepMounted
-                    open={Boolean(anchorEl)}
-                    onClose={handleMenuClose}
-                  >
-                    <MenuItem onClick={handleMenuClose}>
-                      <Typography
-                        component={Link}
-                        to="/settings"
-                        sx={{
-                          textDecoration: "none",
-                          color: "black",
-                        }}
-                      >
-                        Settings
-                      </Typography>
-                    </MenuItem>
-                    <MenuItem onClick={handleMenuClose}>
-                      <Typography
-                        component={Link}
-                        to="/teams"
-                        sx={{ textDecoration: "none", color: "black" }}
-                      >
-                        Teams
-                      </Typography>
-                    </MenuItem>
-                    <MenuItem>
-                      <Typography onClick={handleLogout}>Logout</Typography>
-                    </MenuItem>
-                  </Menu>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    className="auth-text-link"
-                    style={{ marginRight: "16px" }}
-                  >
-                    Login
-                  </Link>
-                  <Link to="/register" className="auth-text-link">
-                    Register
-                  </Link>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+      <Header
+        teamName={teamName}
+        handleMenuOpen={handleMenuOpen}
+        anchorEl={anchorEl}
+        handleMenuClose={handleMenuClose}
+        handleLogout={handleLogout}
+      />
       <div className="video-list">
         {videos.map((video) => (
           <div key={video.video_id} className="video-item">

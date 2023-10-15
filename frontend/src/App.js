@@ -6,19 +6,22 @@ import Login from "./components/Login";
 import TeamsPage from "./components/TeamsPage";
 import RegisterTeam from "./components/RegisterTeam";
 import React from "react";
+import { AppProvider } from "./components/AppContext";
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/video/:videoId" element={<VideoPage />} />
-        <Route path="/" element={<IndexPage />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/teams" element={<TeamsPage />} />
-        <Route path="/register-team" element={<RegisterTeam />} />
-      </Routes>
-    </Router>
+    <AppProvider>
+      <Router>
+        <Routes>
+          <Route path="/video/:videoId" element={<VideoPage />} />
+          <Route path="/" element={<IndexPage />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/teams" element={<TeamsPage />} />
+          <Route path="/register-team" element={<RegisterTeam />} />
+        </Routes>
+      </Router>
+    </AppProvider>
   );
 }
 

@@ -75,7 +75,7 @@ def team_register_options():
 def team_register():
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request"}), 400
-    print(request)
+
     team_name_reference = request.json.get('team_name_reference', None)
     team_name_display = request.json.get('team_name_display', None)
     owner_id = request.json.get('owner_id', None)
@@ -101,7 +101,15 @@ def team_register():
         INSERT INTO Team (team_name_reference, team_name_display, owner_id)
         VALUES (?, ?, ?)
     ''', (team_name_reference, team_name_display, owner_id))
-    
+
+    # Get the ID of the newly inserted team
+    team_id = c.lastrowid
+
+    # Set the user's team_id in the Users table
+    c.execute('''
+        UPDATE Users SET team_id = ? WHERE user_id = ?
+    ''', (team_id, owner_id))
+
     conn.commit()
     conn.close()
 
