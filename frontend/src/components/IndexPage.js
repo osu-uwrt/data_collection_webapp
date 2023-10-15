@@ -83,6 +83,7 @@ function IndexPage() {
   const handleLogout = () => {
     localStorage.removeItem("token"); // Remove JWT token from local storage
     setUsername(null); // Reset the username state to null
+    setTeamName(null);
     setAnchorEl(null); // Close the dropdown menu
 
     setSnackbarMessage("Successfully logged out!");

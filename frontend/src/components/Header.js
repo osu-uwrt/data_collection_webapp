@@ -12,8 +12,7 @@ const Header = ({
   handleLogout,
 }) => {
   const navigate = useNavigate();
-  const { teamName, isTeamNameLoading, username, setUsername } =
-    useAppContext();
+  const { teamName, username } = useAppContext();
 
   return (
     <div className="minimalist-header">
@@ -26,6 +25,7 @@ const Header = ({
           />
         </Link>
       </div>
+
       <Typography fontSize="large">
         <NavLink
           to="/"
@@ -35,15 +35,17 @@ const Header = ({
         >
           Home
         </NavLink>
-        <NavLink
-          to="/teams"
-          exact
-          activeClassName="active-link"
-          style={{ color: "white", marginRight: "32px" }}
-        >
-          Teams
-        </NavLink>
-        {!isTeamNameLoading && teamName && (
+        {username && (
+          <NavLink
+            to="/teams"
+            exact
+            activeClassName="active-link"
+            style={{ color: "white", marginRight: "32px" }}
+          >
+            Teams
+          </NavLink>
+        )}
+        {teamName && (
           <NavLink
             to={`/${teamName}`}
             exact
@@ -97,8 +99,8 @@ const Header = ({
                     Teams
                   </Typography>
                 </MenuItem>
-                <MenuItem>
-                  <Typography onClick={handleLogout}>Logout</Typography>
+                <MenuItem onClick={handleLogout}>
+                  <Typography>Logout</Typography>
                 </MenuItem>
               </Menu>
             </>
