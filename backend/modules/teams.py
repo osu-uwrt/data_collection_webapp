@@ -12,7 +12,7 @@ def get_db_conn():
 def get_teams():
     conn = get_db_conn()
     cursor = conn.cursor()
-    cursor.execute("SELECT team_id, team_name, thumbnail FROM Team")
+    cursor.execute("SELECT team_id, team_name_display, thumbnail FROM Team")  # Adjusted column name here
     teams = cursor.fetchall()
     conn.close()
 
@@ -20,6 +20,7 @@ def get_teams():
     teams_list = [{"team_id": t[0], "team_name": t[1], "thumbnail": t[2]} for t in teams]
     
     return jsonify(teams_list)
+
 
 @app.route('/data/teams/<int:team_id>/<filename>')
 def serve_team_image(team_id, filename):

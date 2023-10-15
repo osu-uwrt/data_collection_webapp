@@ -75,15 +75,15 @@ def create_tables():
 
     c.execute('''
         CREATE TABLE IF NOT EXISTS Team (
-            team_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            team_name TEXT NOT NULL UNIQUE,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
+        team_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        team_name_reference TEXT NOT NULL UNIQUE,
+        team_name_display TEXT NOT NULL,
+        owner_id INTEGER REFERENCES Users(user_id),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        thumbnail TEXT
+    )
     ''')
 
-    c.execute('''
-        ALTER TABLE Team ADD COLUMN thumbnail TEXT
-    ''')
 
     conn.commit()
     conn.close()

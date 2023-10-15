@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
-import { IconButton, Menu, MenuItem, Typography } from "@mui/material";
+import {
+  IconButton,
+  Menu,
+  MenuItem,
+  Typography,
+  Container,
+} from "@mui/material";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import jwt_decode from "jwt-decode";
 import "../App.css";
@@ -173,44 +179,82 @@ function TeamsPage() {
           )}
         </div>
       </div>
-      <div className="team-list">
-        {teams.map((team) => (
-          <div key={team.team_id} className="team-item">
-            <Link
-              to={`/${formatTeamNameForURL(team.team_name)}`}
-              className="team-link"
-            >
-              <div className="team-thumbnail">
-                <img
-                  src={
-                    team.thumbnail
-                      ? `${BASE_URL}/data/teams/${team.team_id}/${team.thumbnail}`
-                      : "path_to_default_thumbnail"
-                  }
-                  alt={`Team ${team.team_name}`}
-                />
+      {!isLoading && (
+        <>
+          {username ? (
+            <div className="team-list">
+              {teams.map((team) => (
+                <div key={team.team_id} className="team-item">
+                  <Link
+                    to={`/${formatTeamNameForURL(team.team_name)}`}
+                    className="team-link"
+                  >
+                    <div className="team-thumbnail">
+                      <img
+                        src={
+                          team.thumbnail
+                            ? `${BASE_URL}/data/teams/${team.team_id}/${team.thumbnail}`
+                            : "path_to_default_thumbnail"
+                        }
+                        alt={`Team ${team.team_name}`}
+                      />
+                    </div>
+                    <p className="team-name">{team.team_name}</p>
+                  </Link>
+                </div>
+              ))}
+              {/* "Add a Team" option */}
+              <div className="team-item">
+                <Link to="/add-team" className="team-link">
+                  <div
+                    className="team-thumbnail"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <AddIcon style={{ fontSize: "5em", color: "#aaa" }} />
+                  </div>
+                  <p className="team-name">Add Team</p>
+                </Link>
               </div>
-              <p className="team-name">{team.team_name}</p>
-            </Link>
-          </div>
-        ))}
-        {/* "Add a Team" option */}
-        <div className="team-item">
-          <Link to="/add-team" className="team-link">
-            <div
-              className="team-thumbnail"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <AddIcon style={{ fontSize: "5em", color: "#aaa" }} />
             </div>
-            <p className="team-name">Add Team</p>
-          </Link>
-        </div>
-      </div>
+          ) : (
+            <Container
+              component="main"
+              maxWidth="xs"
+              style={{ marginTop: "10%", textAlign: "center" }}
+            >
+              <Typography variant="h5">
+                You need an account to see the teams.
+              </Typography>
+              <Typography
+                variant="body2"
+                style={{
+                  marginTop: 16,
+                }}
+              >
+                Sign up now{" "}
+                <Link to="/register" style={{ textDecoration: "underline" }}>
+                  Register
+                </Link>
+              </Typography>
+              <Typography
+                variant="body2"
+                style={{
+                  marginTop: 16,
+                }}
+              >
+                Already have an account?{" "}
+                <Link to="/login" style={{ textDecoration: "underline" }}>
+                  Login
+                </Link>
+              </Typography>
+            </Container>
+          )}
+        </>
+      )}
 
       <Snackbar
         open={snackbarOpen}
