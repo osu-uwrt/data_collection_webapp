@@ -55,7 +55,11 @@ function BoundingBox({
   }, [dragging]);
 
   useEffect(() => {
-    setCurrentFrameBoxes(frameBoxes[currentFrame]);
+    if (frameBoxes[currentFrame] !== undefined) {
+      setCurrentFrameBoxes(frameBoxes[currentFrame]);
+    } else {
+      setCurrentFrameBoxes([]);
+    }
     console.log("currentFrameBoxes", currentFrameBoxes);
   }, [currentFrame, frameBoxes]);
 

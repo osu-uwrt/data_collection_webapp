@@ -16,7 +16,8 @@ def create_tables():
             video_name TEXT NOT NULL,
             video_width INTEGER NOT NULL,
             video_height INTEGER NOT NULL,
-            team_id INTEGER REFERENCES Team(team_id)
+            team_id INTEGER REFERENCES Team(team_id),
+            published INTEGER DEFAULT 0
         )
     ''')
 
@@ -81,7 +82,7 @@ def create_tables():
     ''')
 
     c.execute('''
-        ALTER TABLE Video ADD COLUMN published INTEGER DEFAULT 0
+        ALTER TABLE Team ADD COLUMN thumbnail TEXT
     ''')
 
     conn.commit()

@@ -9,6 +9,7 @@ import modules.video_serving
 import modules.bbox_processing
 import modules.register
 import modules.login
+import modules.teams
 from modules.video_processing import get_published_videos
 
 # Move the app configurations to the top
