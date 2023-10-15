@@ -61,7 +61,7 @@ def get_total_frames(video_id):  # Updated parameter name to video_id
     frames_directory = os.path.join("backend", "data", "frames", str(video_id))  # Use str(video_id)
     return len([f for f in os.listdir(frames_directory) if f.endswith('.jpg')])
 
-def get_uploaded_videos():
+def get_published_videos():
     base_path = os.path.join("backend", 'data', 'frames')
     video_ids = os.listdir(base_path)  # These will now be video IDs
     
@@ -72,7 +72,7 @@ def get_uploaded_videos():
     videos = []  # List to store matched video IDs and names
 
     for video_id in video_ids:
-        c.execute("SELECT video_name FROM Video WHERE video_id=?", (video_id,))
+        c.execute("SELECT video_name FROM Video WHERE video_id=? AND published=1", (video_id,))
         result = c.fetchone()
         if result:
             video_name = result[0]
@@ -80,4 +80,5 @@ def get_uploaded_videos():
 
     conn.close()
     return videos
+
 

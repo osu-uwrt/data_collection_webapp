@@ -9,7 +9,7 @@ import modules.video_serving
 import modules.bbox_processing
 import modules.register
 import modules.login
-from modules.video_processing import get_uploaded_videos
+from modules.video_processing import get_published_videos
 
 # Move the app configurations to the top
 app.secret_key = 'some_secret_key'  # Change this to a secure key
@@ -20,7 +20,7 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 
 @app.route('/')
 def index():
-    videos = get_uploaded_videos()
+    videos = get_published_videos()
     return jsonify(videos)
 
 for rule in app.url_map.iter_rules():

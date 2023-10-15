@@ -467,7 +467,7 @@ h3 {
   margin-bottom: 20px;
   width: 100%;
   padding: 0 16px;
-  height: 60px; /* This sets a fixed height for your header */
+  height: 40px; /* This sets a fixed height for your header */
   box-sizing: border-box; /* This ensures padding is included in the height */
 }
 

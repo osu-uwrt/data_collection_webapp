@@ -80,6 +80,10 @@ def create_tables():
         )
     ''')
 
+    c.execute('''
+        ALTER TABLE Video ADD COLUMN published INTEGER DEFAULT 0
+    ''')
+
     conn.commit()
     conn.close()
 

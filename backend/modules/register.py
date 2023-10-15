@@ -29,6 +29,9 @@ def register():
     
     if not username or not password or not email:
         return jsonify({"msg": "Missing username, password, or email"}), 400
+    
+    # Convert username to lowercase
+    username = username.lower()
 
     conn = get_db_conn()
     c = conn.cursor()

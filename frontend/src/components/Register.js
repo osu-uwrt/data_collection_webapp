@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Button,
   TextField,
@@ -14,6 +14,7 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { makeStyles } from "@mui/styles";
 import Slide from "@mui/material/Slide";
+import logo from "../logo.svg";
 
 function TransitionRight(props) {
   return <Slide {...props} direction="right" />;
@@ -22,6 +23,9 @@ function TransitionRight(props) {
 const useStyles = makeStyles({
   whiteBorder: {
     borderColor: "white !important",
+  },
+  loginContainer: {
+    marginTop: "10%", // Or any other desired percentage or fixed value
   },
 });
 
@@ -117,127 +121,157 @@ export default function Register() {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
-      <Typography variant="h5">Register</Typography>
-      <form onSubmit={handleSubmit}>
-        <TextField
-          variant="outlined"
-          margin="normal"
-          required
-          fullWidth
-          id="username"
-          label="Username"
-          name="username"
-          autoComplete="username"
-          autoFocus
-          value={formData.username}
-          onChange={handleChange}
-          error={!!error.username}
-          helperText={error.username}
-          style={{ color: "white" }}
-          InputProps={{
-            style: {
-              color: "white",
-            },
-            classes: {
-              notchedOutline: classes.whiteBorder,
-            },
-          }}
-          InputLabelProps={{
-            style: {
-              color: "white",
-            },
-          }}
-        />
-        <TextField
-          variant="outlined"
-          margin="normal"
-          required
-          fullWidth
-          name="email"
-          label="Email Address"
-          id="email"
-          autoComplete="email"
-          value={formData.email}
-          onChange={handleChange}
-          error={!!error.email}
-          helperText={error.email}
-          style={{ color: "white" }}
-          InputProps={{
-            style: {
-              color: "white",
-            },
-            classes: {
-              notchedOutline: classes.whiteBorder,
-            },
-          }}
-          InputLabelProps={{
-            style: {
-              color: "white",
-            },
-          }}
-        />
-        <TextField
-          variant="outlined"
-          margin="normal"
-          required
-          fullWidth
-          name="password"
-          label="Password"
-          type={showPassword ? "text" : "password"}
-          id="password"
-          autoComplete="current-password"
-          value={formData.password}
-          onChange={handleChange}
-          error={!!error.password}
-          helperText={error.password}
-          style={{ color: "white" }}
-          className="white-label"
-          InputProps={{
-            style: {
-              color: "white",
-            },
-            classes: {
-              notchedOutline: classes.whiteBorder,
-            },
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  onClick={() => setShowPassword(!showPassword)}
-                  edge="end"
-                >
-                  {showPassword ? (
-                    <VisibilityOff style={{ color: "white" }} />
-                  ) : (
-                    <Visibility style={{ color: "white" }} />
-                  )}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-          InputLabelProps={{
-            style: {
-              color: "white",
-            },
-          }}
-        />
-        <Button type="submit" fullWidth variant="contained" color="primary">
-          Register
-        </Button>
-      </form>
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        TransitionComponent={TransitionRight}
-        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-      >
-        <div>
-          <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity}>
-            {snackbarMessage}
-          </Alert>
+    <div className="index-page">
+      <div className="minimalist-header">
+        <div className="header-left">
+          <Link to="/" className={classes.hyperLink}>
+            <img
+              src={logo}
+              alt="Your Logo"
+              style={{ height: "50px", float: "left" }}
+            />
+          </Link>
         </div>
-      </Snackbar>
-    </Container>
+      </div>
+      <Container
+        component="main"
+        maxWidth="xs"
+        className={classes.loginContainer}
+      >
+        <Typography variant="h5">Register</Typography>
+        <form onSubmit={handleSubmit}>
+          <TextField
+            variant="outlined"
+            margin="normal"
+            required
+            fullWidth
+            id="username"
+            label="Username"
+            name="username"
+            autoComplete="username"
+            autoFocus
+            value={formData.username}
+            onChange={handleChange}
+            error={!!error.username}
+            helperText={error.username}
+            style={{ color: "white" }}
+            InputProps={{
+              style: {
+                color: "white",
+              },
+              classes: {
+                notchedOutline: classes.whiteBorder,
+              },
+            }}
+            InputLabelProps={{
+              style: {
+                color: "white",
+              },
+            }}
+          />
+          <TextField
+            variant="outlined"
+            margin="normal"
+            required
+            fullWidth
+            name="email"
+            label="Email Address"
+            id="email"
+            autoComplete="email"
+            value={formData.email}
+            onChange={handleChange}
+            error={!!error.email}
+            helperText={error.email}
+            style={{ color: "white" }}
+            InputProps={{
+              style: {
+                color: "white",
+              },
+              classes: {
+                notchedOutline: classes.whiteBorder,
+              },
+            }}
+            InputLabelProps={{
+              style: {
+                color: "white",
+              },
+            }}
+          />
+          <TextField
+            variant="outlined"
+            margin="normal"
+            required
+            fullWidth
+            name="password"
+            label="Password"
+            type={showPassword ? "text" : "password"}
+            id="password"
+            autoComplete="current-password"
+            value={formData.password}
+            onChange={handleChange}
+            error={!!error.password}
+            helperText={error.password}
+            style={{ color: "white" }}
+            className="white-label"
+            InputProps={{
+              style: {
+                color: "white",
+              },
+              classes: {
+                notchedOutline: classes.whiteBorder,
+              },
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword(!showPassword)}
+                    edge="end"
+                  >
+                    {showPassword ? (
+                      <VisibilityOff style={{ color: "white" }} />
+                    ) : (
+                      <Visibility style={{ color: "white" }} />
+                    )}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            InputLabelProps={{
+              style: {
+                color: "white",
+              },
+            }}
+          />
+          <Button type="submit" fullWidth variant="contained" color="primary">
+            Register
+          </Button>
+
+          <Typography
+            variant="body2"
+            style={{ marginTop: 16, textAlign: "center" }}
+          >
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              style={{ color: "white", textDecoration: "underline" }}
+            >
+              Login
+            </Link>
+          </Typography>
+        </form>
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={6000}
+          onClose={handleCloseSnackbar}
+          TransitionComponent={TransitionRight}
+          anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        >
+          <div>
+            <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity}>
+              {snackbarMessage}
+            </Alert>
+          </div>
+        </Snackbar>
+      </Container>
+    </div>
   );
 }

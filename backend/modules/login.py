@@ -30,11 +30,14 @@ def login():
     if not username or not password:
         return jsonify({"msg": "Missing username or password"}), 400
 
+    # Convert username to lowercase for the database check
+    db_username = username.lower()
+
     conn = get_db_conn()
     c = conn.cursor()
 
     # Check if user exists based on username
-    c.execute('SELECT username, hashed_password FROM Users WHERE username = ?', (username,))
+    c.execute('SELECT username, hashed_password FROM Users WHERE username = ?', (db_username,))
     user = c.fetchone()
     
     if not user:
