@@ -12,6 +12,7 @@ import { makeStyles } from "@mui/styles";
 import Slide from "@mui/material/Slide";
 import logo from "../logo.svg";
 import jwt_decode from "jwt-decode";
+import LoadingScreen from "./LoadingScreen";
 
 function TransitionRight(props) {
   return <Slide {...props} direction="right" />;
@@ -47,6 +48,7 @@ export default function Register() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [loading, setLoading] = useState(false);
 
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
@@ -77,7 +79,7 @@ export default function Register() {
         console.error("Error decoding token:", error);
       }
     }
-  });
+  }, [token]);
 
   const validate = () => {
     const errors = {};
@@ -97,7 +99,7 @@ export default function Register() {
       // Assuming the JWT is stored in localStorage and contains the user's ID as "id"
       let ownerId;
       if (token) {
-        const decodedToken = JSON.parse(atob(token.split(".")[1]));
+        const decodedToken = jwt_decode(token);
         ownerId = decodedToken.user_id;
         console.log(token, decodedToken, ownerId);
       }
@@ -122,7 +124,11 @@ export default function Register() {
         const responseData = await response.json();
 
         if (response.status === 201) {
+          const newToken = responseData.token;
+          localStorage.setItem("token", newToken); // Store the new token
+          setToken(newToken); // Update the state with the new token
           showSnackbar("Team registered successfully!", "success");
+          setLoading(true);
           setTimeout(() => {
             navigate("/");
           }, 2000);
@@ -142,125 +148,134 @@ export default function Register() {
 
   return (
     <div className="index-page">
-      <div className="minimalist-header">
-        <div className="header-left">
-          <Link to="/" className={classes.hyperLink}>
-            <img
-              src={logo}
-              alt="Your Logo"
-              style={{ height: "50px", float: "left" }}
-            />
-          </Link>
-        </div>
-      </div>
-      {username ? (
+      {!loading ? (
         <>
-          {!teamId ? (
-            <Container
-              component="main"
-              maxWidth="xs"
-              className={classes.loginContainer}
-            >
-              <Typography variant="h5">Register</Typography>
-              <form onSubmit={handleSubmit}>
-                <TextField
-                  variant="outlined"
-                  margin="normal"
-                  required
-                  fullWidth
-                  id="teamName"
-                  label="Team Name"
-                  name="teamName"
-                  value={formData.teamName}
-                  onChange={handleChange}
-                  error={!!error.teamName}
-                  helperText={error.teamName}
-                  style={{ color: "white" }}
-                  InputProps={{
-                    style: {
-                      color: "white",
-                    },
-                    classes: {
-                      notchedOutline: classes.whiteBorder,
-                    },
-                  }}
-                  InputLabelProps={{
-                    style: {
-                      color: "white",
-                    },
-                  }}
+          <div className="minimalist-header">
+            <div className="header-left">
+              <Link to="/" className={classes.hyperLink}>
+                <img
+                  src={logo}
+                  alt="Your Logo"
+                  style={{ height: "50px", float: "left" }}
                 />
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  color="primary"
+              </Link>
+            </div>
+          </div>
+          {username ? (
+            <>
+              {!teamId ? (
+                <Container
+                  component="main"
+                  maxWidth="xs"
+                  className={classes.loginContainer}
                 >
-                  Register
-                </Button>
-              </form>
-              <Snackbar
-                open={snackbarOpen}
-                autoHideDuration={6000}
-                onClose={handleCloseSnackbar}
-                TransitionComponent={TransitionRight}
-                anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-              >
-                <div>
-                  <Alert
+                  <Typography variant="h5">Register</Typography>
+                  <form onSubmit={handleSubmit}>
+                    <TextField
+                      variant="outlined"
+                      margin="normal"
+                      required
+                      fullWidth
+                      id="teamName"
+                      label="Team Name"
+                      name="teamName"
+                      value={formData.teamName}
+                      onChange={handleChange}
+                      error={!!error.teamName}
+                      helperText={error.teamName}
+                      style={{ color: "white" }}
+                      InputProps={{
+                        style: {
+                          color: "white",
+                        },
+                        classes: {
+                          notchedOutline: classes.whiteBorder,
+                        },
+                      }}
+                      InputLabelProps={{
+                        style: {
+                          color: "white",
+                        },
+                      }}
+                    />
+                    <Button
+                      type="submit"
+                      fullWidth
+                      variant="contained"
+                      color="primary"
+                    >
+                      Register
+                    </Button>
+                  </form>
+                  <Snackbar
+                    open={snackbarOpen}
+                    autoHideDuration={6000}
                     onClose={handleCloseSnackbar}
-                    severity={snackbarSeverity}
+                    TransitionComponent={TransitionRight}
+                    anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
                   >
-                    {snackbarMessage}
-                  </Alert>
-                </div>
-              </Snackbar>
-            </Container>
+                    <div>
+                      <Alert
+                        onClose={handleCloseSnackbar}
+                        severity={snackbarSeverity}
+                      >
+                        {snackbarMessage}
+                      </Alert>
+                    </div>
+                  </Snackbar>
+                </Container>
+              ) : (
+                <Container
+                  component="main"
+                  maxWidth="xs"
+                  className={classes.loginContainer}
+                >
+                  <Typography variant="h6">
+                    You are already in a team.
+                  </Typography>
+                  <Typography variant="body2" style={{ marginTop: 16 }}>
+                    To register a new team, you must leave your current team
+                    first.
+                  </Typography>
+                </Container>
+              )}
+            </>
           ) : (
             <Container
               component="main"
               maxWidth="xs"
-              className={classes.loginContainer}
+              style={{ marginTop: "10%", textAlign: "center" }}
             >
-              <Typography variant="h6">You are already in a team.</Typography>
-              <Typography variant="body2" style={{ marginTop: 16 }}>
-                To register a new team, you must leave your current team first.
+              <Typography variant="h5">
+                You need an account to create a team.
+              </Typography>
+              <Typography
+                variant="body2"
+                style={{
+                  marginTop: 16,
+                }}
+              >
+                Sign up now{" "}
+                <Link to="/register" style={{ textDecoration: "underline" }}>
+                  Register
+                </Link>
+              </Typography>
+              <Typography
+                variant="body2"
+                style={{
+                  marginTop: 16,
+                }}
+              >
+                Already have an account?{" "}
+                <Link to="/login" style={{ textDecoration: "underline" }}>
+                  Login
+                </Link>
               </Typography>
             </Container>
           )}
         </>
       ) : (
-        <Container
-          component="main"
-          maxWidth="xs"
-          style={{ marginTop: "10%", textAlign: "center" }}
-        >
-          <Typography variant="h5">
-            You need an account to create a team.
-          </Typography>
-          <Typography
-            variant="body2"
-            style={{
-              marginTop: 16,
-            }}
-          >
-            Sign up now{" "}
-            <Link to="/register" style={{ textDecoration: "underline" }}>
-              Register
-            </Link>
-          </Typography>
-          <Typography
-            variant="body2"
-            style={{
-              marginTop: 16,
-            }}
-          >
-            Already have an account?{" "}
-            <Link to="/login" style={{ textDecoration: "underline" }}>
-              Login
-            </Link>
-          </Typography>
-        </Container>
+        <LoadingScreen />
       )}
     </div>
   );

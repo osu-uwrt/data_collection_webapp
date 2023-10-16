@@ -1,13 +1,24 @@
 from flask import request, jsonify
 from app_instance import app
 from werkzeug.security import generate_password_hash
+import jwt
 import sqlite3
 import os
 
+SECRET_KEY = 'your_secret_key'
 DB_PATH = os.path.join(os.getcwd(), "backend/data/db/data.db")
 
 def get_db_conn():
     return sqlite3.connect(DB_PATH)
+
+def generate_token(username, user_id, team_id):  # <-- You can reuse this function
+    payload = {
+        "username": username,
+        "user_id": user_id,
+        "team_id": team_id
+    }
+    token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+    return token
 
 @app.route('/register', methods=['OPTIONS'])
 def register_options():
@@ -57,19 +68,16 @@ def register():
         INSERT INTO Users (username, hashed_password, email)
         VALUES (?, ?, ?)
     ''', (username, hashed_password, email))
+
+    user_id = c.lastrowid
+    print(user_id)
+
+    token = generate_token(username, user_id, team_id=None)
     
     conn.commit()
     conn.close()
 
-    return jsonify({"msg": "User registered successfully"}), 201
-
-@app.route('/register-team', methods=['OPTIONS'])
-def team_register_options():
-    return '', 200, {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST',
-        'Access-Control-Allow-Headers': 'Content-Type',
-    }
+    return jsonify({"token": token, "msg": "User registered successfully"}), 201
 
 @app.route('/register-team', methods=['POST'])
 def team_register():
@@ -85,7 +93,6 @@ def team_register():
 
     # Convert team_name_reference to lowercase
     team_name_reference = team_name_reference.lower().replace(" ", "_")
-
 
     conn = get_db_conn()
     c = conn.cursor()
@@ -111,7 +118,18 @@ def team_register():
         UPDATE Users SET team_id = ? WHERE user_id = ?
     ''', (team_id, owner_id))
 
+    # Fetch the username of the owner
+    c.execute('SELECT username FROM Users WHERE user_id = ?', (owner_id,))
+    owner_data = c.fetchone()
+    owner_username = owner_data[0] if owner_data else None
+
     conn.commit()
     conn.close()
 
-    return jsonify({"msg": "Team registered successfully"}), 201
+    if not owner_username:
+        return jsonify({"msg": "Error: User not found"}), 500
+
+    # Generate the token
+    token = generate_token(owner_username, owner_id, team_id)
+
+    return jsonify({"token": token, "msg": "Team registered successfully"}), 201
