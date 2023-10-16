@@ -95,7 +95,7 @@ function TeamDashboard() {
     if (teamId) {
       fetchTeamVideos();
     }
-  }, [token, teamId]);
+  }, [token, teamId, pageTeamName]);
 
   const showSnackbar = (message, severity = "success") => {
     setSnackbarMessage(message);
