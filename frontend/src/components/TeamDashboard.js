@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import "../App.css";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 import Slide from "@mui/material/Slide";
 import Header from "./Header";
 import { useAppContext } from "./AppContext";
+import AddIcon from "@mui/icons-material/Add";
 
 const BASE_URL = process.env.REACT_APP_BASE_URL;
 
@@ -27,9 +28,12 @@ function TeamDashboard() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [teamId, setTeamId] = useState(null);
+  const [userTeamId, setUserTeamId] = useState(null);
 
   const { pageTeamName } = useParams();
   const { teamName, setTeamName, username, setUsername } = useAppContext();
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTeamVideos = async () => {
@@ -69,6 +73,7 @@ function TeamDashboard() {
           setUsername(decoded.username);
         }
 
+        setUserTeamId(decoded.team_id);
         (async () => {
           try {
             const response = await fetch(
@@ -146,6 +151,23 @@ function TeamDashboard() {
             </Link>
           </div>
         ))}
+        {teamId === userTeamId && (
+          <div className="video-item">
+            <Link to="/add-video" className="video-link">
+              <div
+                className="video-thumbnail"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <AddIcon style={{ fontSize: "5em", color: "#aaa" }} />
+              </div>
+              <p className="video-name">Add Video</p>
+            </Link>
+          </div>
+        )}
       </div>
       <Snackbar
         open={snackbarOpen}
