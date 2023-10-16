@@ -3,7 +3,7 @@ from flask_cors import CORS
 from flask_wtf import FlaskForm, CSRFProtect
 from wtforms import FloatField, FileField, validators
 from app_instance import app
-import pages.page1
+import modules.add_video
 import pages.video
 import modules.video_serving
 import modules.bbox_processing

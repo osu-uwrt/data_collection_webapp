@@ -8,7 +8,7 @@ DB_PATH = os.path.join(os.getcwd(), "backend/data/db/data.db")
 def get_db_conn():
     return sqlite3.connect(DB_PATH)
 
-def save_and_extract_frames(video_file):
+def save_and_extract_frames(video_file, team_id):  # Add team_id as a parameter
     root_data_dir = os.path.join("backend", "data")
     
     upload_dir = os.path.join(root_data_dir, "uploads")
@@ -29,8 +29,8 @@ def save_and_extract_frames(video_file):
     conn = get_db_conn()
     c = conn.cursor()
     c.execute('''
-        INSERT INTO Video (video_name, video_width, video_height) VALUES (?, ?, ?)
-    ''', (video_name, video_width, video_height))
+        INSERT INTO Video (video_name, video_width, video_height, team_id) VALUES (?, ?, ?, ?)
+    ''', (video_name, video_width, video_height, team_id))
     video_id = c.lastrowid  # Get the last inserted ID
     conn.commit()
     conn.close()
@@ -54,6 +54,7 @@ def save_and_extract_frames(video_file):
         count += 1
         
     return video_id
+
 
 
 

@@ -117,6 +117,8 @@ function TeamDashboard() {
     setSnackbarMessage("Successfully logged out!");
     setSnackbarSeverity("success");
     setSnackbarOpen(true);
+
+    navigate("/");
   };
 
   // Handle dropdown menu actions
