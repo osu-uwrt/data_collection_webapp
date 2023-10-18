@@ -88,6 +88,9 @@ function BoundingBox({
   };
 
   useEffect(() => {
+    if (currentFrameBoxes.length < 1) {
+      canvasRef.current.style.cursor = "default";
+    }
     if (currentFrameBoxes && currentFrameBoxes.length !== previousLength) {
       console.log("UPDATED");
       updateFrameBoxesWithCurrentFrame();
@@ -209,6 +212,7 @@ function BoundingBox({
       let isDragging = dragging;
 
       if (event.ctrlKey) {
+        setSelected(null);
         setCreatingBox(true);
         setInitialPosition({ x, y });
         const newBox = {
