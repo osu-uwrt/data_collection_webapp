@@ -279,7 +279,7 @@ function BoundingBox({
 
       if (newlySelectedBoxIndex === null && !isDragging) {
         setSelected(null);
-      } else if (newlySelectedBoxIndex !== null) {
+      } else if (newlySelectedBoxIndex !== null && !event.shiftKey) {
         setSelected(newlySelectedBoxIndex);
         setLastSelectedClass(currentFrameBoxes[newlySelectedBoxIndex].class);
       }
