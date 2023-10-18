@@ -146,6 +146,10 @@ function VideoPage() {
   });
 
   useEffect(() => {
+    console.log("Updated Frame Boxes", frameBoxes);
+  }, [frameBoxes]);
+
+  useEffect(() => {
     const savedColors = localStorage.getItem("classBoxes");
     if (savedColors) {
       setClassBoxes(JSON.parse(savedColors));
@@ -395,7 +399,7 @@ function VideoPage() {
   return (
     <div className="video-page">
       {loading ? (
-        <div>Loading...</div>
+        <div />
       ) : (
         <>
           <header className="app-header">

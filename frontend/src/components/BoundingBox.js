@@ -35,7 +35,7 @@ function BoundingBox({
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("error");
   const [currentFrameBoxes, setCurrentFrameBoxes] = useState([]);
-  const previousLength = useRef(currentFrameBoxes?.length || 0);
+  const [previousLength, setPreviousLength] = useState(0);
 
   const MIN_WIDTH = 10;
   const MIN_HEIGHT = 10;
@@ -43,11 +43,11 @@ function BoundingBox({
   useEffect(() => {
     const currentLength = currentFrameBoxes?.length || 0;
 
-    if (currentLength < previousLength.current) {
+    if (currentLength < previousLength) {
       setSelected(null);
     }
 
-    previousLength.current = currentLength;
+    setPreviousLength(currentLength);
   }, [currentFrameBoxes]);
 
   useEffect(() => {
@@ -55,30 +55,47 @@ function BoundingBox({
   }, [dragging]);
 
   useEffect(() => {
+    let updated = false;
+    const newFrameBoxes = { ...frameBoxes };
+
+    for (let frame in frameBoxes) {
+      if (frameBoxes[frame] === undefined) {
+        newFrameBoxes[frame] = [];
+        updated = true;
+      }
+    }
+
+    if (updated) {
+      setFrameBoxes(newFrameBoxes);
+    }
+
     if (frameBoxes[currentFrame] !== undefined) {
       setCurrentFrameBoxes(frameBoxes[currentFrame]);
     } else {
       setCurrentFrameBoxes([]);
     }
-    console.log("currentFrameBoxes", currentFrameBoxes);
   }, [currentFrame, frameBoxes]);
 
   useEffect(() => {
     setSelected(null);
   }, [currentFrame]);
 
+  const updateFrameBoxesWithCurrentFrame = () => {
+    setFrameBoxes((prev) => ({
+      ...prev,
+      [currentFrame]: currentFrameBoxes,
+    }));
+  };
+
   useEffect(() => {
-    if (
-      currentFrameBoxes !== undefined &&
-      currentFrameBoxes != frameBoxes[currentFrame]
-    ) {
-      console.log("A");
-      setFrameBoxes((prev) => ({
-        ...prev,
-        [currentFrame]: currentFrameBoxes,
-      }));
+    if (currentFrameBoxes && currentFrameBoxes.length !== previousLength) {
+      console.log("UPDATED");
+      updateFrameBoxesWithCurrentFrame();
     }
-  }, [currentFrameBoxes.length, selected]);
+
+    // Update the ref value
+    setPreviousLength(currentFrameBoxes.length);
+  }, [currentFrame, currentFrameBoxes, frameBoxes]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -267,6 +284,7 @@ function BoundingBox({
         setLastSelectedClass(currentFrameBoxes[newlySelectedBoxIndex].class);
       }
       setDragging(isDragging);
+      updateFrameBoxesWithCurrentFrame(currentFrameBoxes);
     },
     [currentFrameBoxes]
   );
@@ -791,6 +809,7 @@ function BoundingBox({
     newBox = clampBoxToCanvas(newBox, videoWidth, videoHeight);
 
     setCurrentFrameBoxes([newBox, ...currentBoxes]);
+    setSelected(null);
 
     if (currentFrameBoxes) {
       updateInterpolationNumbers(currentFrameBoxes);
