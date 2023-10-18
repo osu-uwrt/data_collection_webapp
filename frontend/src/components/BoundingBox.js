@@ -55,6 +55,14 @@ function BoundingBox({
   }, [dragging]);
 
   useEffect(() => {
+    for (let frame in frameBoxes) {
+      if (frameBoxes[frame] === undefined) {
+        setFrameBoxes((prev) => ({
+          ...prev,
+          [frame]: [],
+        }));
+      }
+    }
     if (frameBoxes[currentFrame] !== undefined) {
       setCurrentFrameBoxes(frameBoxes[currentFrame]);
     } else {
@@ -68,10 +76,12 @@ function BoundingBox({
   }, [currentFrame]);
 
   useEffect(() => {
-    setFrameBoxes((prev) => ({
-      ...prev,
-      [currentFrame]: currentFrameBoxes,
-    }));
+    if (currentFrameBoxes !== undefined) {
+      setFrameBoxes((prev) => ({
+        ...prev,
+        [currentFrame]: currentFrameBoxes,
+      }));
+    }
   }, [currentFrameBoxes.length, selected]);
 
   useEffect(() => {
