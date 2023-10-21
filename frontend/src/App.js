@@ -10,6 +10,7 @@ import React from "react";
 import { AppProvider } from "./components/AppContext";
 import AddVideo from "./components/AddVideo";
 import ProgressBar from "./components/ProgressBar";
+import Polygon from "./components/Polygon";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
           <Route path="/register-team" element={<RegisterTeam />} />
           <Route path="/add-video" element={<AddVideo />} />
           <Route path="/progress" element={<ProgressBar />} />
+          <Route path="/test" element={<Polygon />} />
           <Route path="/:pageTeamName" element={<TeamDashboard />} />
         </Routes>
       </Router>
