@@ -54,9 +54,11 @@ function Polygon() {
   const [snackbarSeverity, setSnackbarSeverity] = useState("error");
   const [isMousePressed, setIsMousePressed] = useState(false);
   const [hoveringOverFirstPoint, setHoveringOverFirstPoint] = useState(false);
+  const isDrawingEnabled = false;
   const canvasRef = useRef(null);
   const [points, setPoints] = useState([]);
   const [completedPolygons, setCompletedPolygons] = useState([]);
+  const [movingPoint, setMovingPoint] = useState(null);
 
   const handleSnackbarClose = (event, reason) => {
     if (reason === "clickaway") {
@@ -71,6 +73,10 @@ function Polygon() {
     setSnackbarOpen(true);
   };
 
+  useEffect(() => {
+    console.log(completedPolygons);
+  }, [completedPolygons]);
+
   const handleMouseMove = useCallback(
     (event) => {
       const x = event.offsetX;
@@ -84,6 +90,7 @@ function Polygon() {
       }
 
       if (
+        isDrawingEnabled &&
         isShiftDown &&
         isMousePressed &&
         !pointExistsAtPosition(points, x, y)
@@ -98,8 +105,14 @@ function Polygon() {
 
         setPoints((prevPoints) => [...prevPoints, { x, y }]);
       }
+      if (movingPoint && !isDrawingEnabled) {
+        const newCompletedPolygons = [...completedPolygons];
+        newCompletedPolygons[movingPoint.polygonIndex][movingPoint.pointIndex] =
+          { x, y };
+        setCompletedPolygons(newCompletedPolygons);
+      }
     },
-    [isShiftDown, isMousePressed, points]
+    [isDrawingEnabled, isMousePressed, points, movingPoint, completedPolygons]
   );
 
   useEffect(() => {
@@ -218,7 +231,10 @@ function Polygon() {
 
   const handleMouseUp = useCallback(() => {
     setIsMousePressed(false);
-  }, []);
+    if (movingPoint) {
+      setMovingPoint(null);
+    }
+  }, [movingPoint]);
 
   const attemptToClosePolygon = useCallback(() => {
     const originalPoints = [...points];
@@ -236,12 +252,8 @@ function Polygon() {
     });
   }, [points]);
 
-  const handleMouseDown = useCallback(
-    (event) => {
-      setIsMousePressed(true);
-      const x = event.offsetX;
-      const y = event.offsetY;
-
+  const handleDrawingMouseDown = useCallback(
+    (x, y) => {
       const firstPoint = points[0];
       const distance =
         points.length > 2 ? calculateDistance({ x, y }, firstPoint) : Infinity;
@@ -251,12 +263,51 @@ function Polygon() {
         return;
       }
 
-      if (pointExistsAtPosition(points, x, y)) {
-        return; // Prevent adding a duplicate point
+      if (!pointExistsAtPosition(points, x, y)) {
+        setPoints((prevPoints) => [...prevPoints, { x, y }]);
       }
-      setPoints((prevPoints) => [...prevPoints, { x, y }]);
     },
-    [points]
+    [points, attemptToClosePolygon]
+  );
+
+  const findPointNearMouse = useCallback(
+    (x, y) => {
+      for (const polygon of completedPolygons) {
+        for (const [index, point] of polygon.entries()) {
+          if (calculateDistance(point, { x, y }) < SOME_THRESHOLD) {
+            return {
+              polygonIndex: completedPolygons.indexOf(polygon),
+              pointIndex: index,
+            };
+          }
+        }
+      }
+      return null;
+    },
+    [completedPolygons]
+  );
+  const handleMouseDown = useCallback(
+    async (event) => {
+      setIsMousePressed(true);
+      const x = event.offsetX;
+      const y = event.offsetY;
+
+      if (event.button === 2) {
+        event.preventDefault();
+        setPoints((prevPoints) => prevPoints.slice(0, -1));
+        return;
+      }
+
+      if (isDrawingEnabled) {
+        handleDrawingMouseDown(x, y);
+      } else {
+        const pointToMove = findPointNearMouse(x, y);
+        if (pointToMove) {
+          setMovingPoint(pointToMove);
+        }
+      }
+    },
+    [isDrawingEnabled, handleDrawingMouseDown, findPointNearMouse]
   );
 
   useEffect(() => {
@@ -264,13 +315,15 @@ function Polygon() {
     canvas.addEventListener("mousedown", handleMouseDown);
     canvas.addEventListener("mouseup", handleMouseUp);
     canvas.addEventListener("mousemove", handleMouseMove);
+    canvas.addEventListener("contextmenu", (e) => e.preventDefault());
 
     return () => {
       canvas.removeEventListener("mousedown", handleMouseDown);
       canvas.removeEventListener("mouseup", handleMouseUp);
       canvas.removeEventListener("mousemove", handleMouseMove);
+      canvas.removeEventListener("contextmenu", (e) => e.preventDefault());
     };
-  }, [handleMouseDown, handleMouseMove, handleMouseUp]);
+  }, [handleMouseDown, handleMouseMove, handleMouseUp, handleDrawingMouseDown]);
 
   return (
     <>
