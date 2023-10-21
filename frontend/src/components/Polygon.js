@@ -20,34 +20,32 @@ function calculateDistance(point1, point2) {
   return Math.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2);
 }
 
+function convertPointsToCoordinates(points) {
+  const coordinates = points.map((p) => [p.x, p.y]);
+  return coordinates;
+}
+
 function useShiftKeyPress() {
   const [isShiftDown, setIsShiftDown] = useState(false);
 
   useEffect(() => {
-    const handleKeyDown = (event) => {
+    const handleKeyEvent = (event) => {
       if (event.key === "Shift") {
-        setIsShiftDown(true);
+        setIsShiftDown(event.type === "keydown");
       }
     };
 
-    const handleKeyUp = (event) => {
-      if (event.key === "Shift") {
-        setIsShiftDown(false);
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("keyup", handleKeyUp);
+    document.addEventListener("keydown", handleKeyEvent);
+    document.addEventListener("keyup", handleKeyEvent);
 
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("keyup", handleKeyUp);
+      document.removeEventListener("keydown", handleKeyEvent);
+      document.removeEventListener("keyup", handleKeyEvent);
     };
   }, []);
 
   return isShiftDown;
 }
-
 function Polygon() {
   const [mousePosition, setMousePosition] = useState(null);
   const isShiftDown = useShiftKeyPress();
@@ -122,7 +120,7 @@ function Polygon() {
 
     // Check if the current polygon is simple or not
     if (points.length > 2) {
-      const currentPolygon = points.map((p) => [p.x, p.y]);
+      const currentPolygon = convertPointsToCoordinates(points);
       currentPolygon.push([points[0].x, points[0].y]); // Close the polygon
     }
 
@@ -187,7 +185,7 @@ function Polygon() {
   }, [points, completedPolygons, mousePosition]);
 
   function unkinkCurrentPolygon(points) {
-    let currentPolygon = points.map((p) => [p.x, p.y]);
+    let currentPolygon = convertPointsToCoordinates(points);
     const firstPoint = points[0];
     currentPolygon.push([firstPoint.x, firstPoint.y]); // Close the polygon
 
