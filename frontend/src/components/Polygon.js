@@ -2,7 +2,14 @@ import React, { useRef, useEffect, useState, useCallback } from "react";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import Slide from "@mui/material/Slide";
-import { polygon, unkinkPolygon, area, booleanWithin } from "@turf/turf";
+import {
+  polygon,
+  unkinkPolygon,
+  area,
+  booleanWithin,
+  point,
+  booleanPointInPolygon,
+} from "@turf/turf";
 
 const CANVAS_WIDTH = 1200;
 const CANVAS_HEIGHT = 800;
@@ -46,7 +53,7 @@ function useShiftKeyPress() {
 
   return isShiftDown;
 }
-function Polygon({ polygonClasses }) {
+function Polygon({ polygonClasses, selected, setSelected }) {
   const [mousePosition, setMousePosition] = useState(null);
   const isShiftDown = useShiftKeyPress();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -54,7 +61,7 @@ function Polygon({ polygonClasses }) {
   const [snackbarSeverity, setSnackbarSeverity] = useState("error");
   const [isMousePressed, setIsMousePressed] = useState(false);
   const [hoveringOverFirstPoint, setHoveringOverFirstPoint] = useState(false);
-  const isDrawingEnabled = true;
+  const isDrawingEnabled = false;
   const canvasRef = useRef(null);
   const [points, setPoints] = useState([]);
   const [completedPolygons, setCompletedPolygons] = useState([]);
@@ -131,37 +138,55 @@ function Polygon({ polygonClasses }) {
 
     ctx.lineWidth = 2;
 
+    const polygonsForRendering = [...(completedPolygons || [])].filter(
+      (polygon) => polygon.visible
+    );
+
+    const sortedPolygons = polygonsForRendering.sort(
+      (a, b) => b.displayOrder - a.displayOrder
+    );
+
     // Draw completed polygons
-    completedPolygons
-      .sort((a, b) => a.displayOrder - b.displayOrder)
-      .forEach((polygon) => {
-        if (polygon.visible) {
-          const polygonClass = polygon.class || "default";
-          const { strokeColor } = polygonClasses[polygonClass] || {};
+    sortedPolygons.forEach((polygon, index) => {
+      const polygonClass = polygon.class || "default";
+      const { strokeColor } = polygonClasses[polygonClass] || {};
 
-          ctx.strokeStyle = strokeColor || "white";
-          ctx.fillStyle = strokeColor || "white";
-          ctx.globalAlpha = 0.3;
+      let positionAfterSorting = sortedPolygons.findIndex(
+        (b) =>
+          completedPolygons[selected] &&
+          b.displayOrder === completedPolygons[selected].displayOrder
+      );
+      const isPolygonSelected = index === positionAfterSorting;
 
-          ctx.beginPath();
-          ctx.moveTo(polygon.points[0].x, polygon.points[0].y);
-          polygon.points.forEach((point) => {
-            ctx.lineTo(point.x, point.y);
-          });
-          ctx.closePath();
-          ctx.stroke();
-          ctx.fill();
+      if (isPolygonSelected) {
+        ctx.setLineDash([5, 5]);
+        ctx.strokeStyle = strokeColor || "white";
+      } else {
+        ctx.setLineDash([]);
+        ctx.strokeStyle = strokeColor || "white";
+      }
+      ctx.strokeStyle = strokeColor || "white";
+      ctx.fillStyle = strokeColor || "white";
+      ctx.globalAlpha = 0.3;
 
-          // Draw circles in specific color
-          ctx.fillStyle = strokeColor || "white";
-          ctx.globalAlpha = 0.75;
-          polygon.points.forEach((point) => {
-            ctx.beginPath();
-            ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
-            ctx.fill();
-          });
-        }
+      ctx.beginPath();
+      ctx.moveTo(polygon.points[0].x, polygon.points[0].y);
+      polygon.points.forEach((point) => {
+        ctx.lineTo(point.x, point.y);
       });
+      ctx.closePath();
+      ctx.stroke();
+      ctx.fill();
+
+      // Draw circles in specific color
+      ctx.fillStyle = strokeColor || "white";
+      ctx.globalAlpha = 0.75;
+      polygon.points.forEach((point) => {
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    });
 
     // Draw in-progress polygon (if any points are present)
     if (points.length) {
@@ -291,13 +316,25 @@ function Polygon({ polygonClasses }) {
 
   const findPointNearMouse = useCallback(
     (x, y) => {
-      for (const polygon of completedPolygons) {
-        for (const [index, point] of polygon.entries()) {
-          if (calculateDistance(point, { x, y }) < SOME_THRESHOLD) {
-            return {
-              polygonIndex: completedPolygons.indexOf(polygon),
-              pointIndex: index,
-            };
+      for (
+        let polygonIndex = 0;
+        polygonIndex < completedPolygons.length;
+        polygonIndex++
+      ) {
+        const polygon = completedPolygons[polygonIndex];
+        if (polygon.visible) {
+          for (
+            let pointIndex = 0;
+            pointIndex < polygon.points.length;
+            pointIndex++
+          ) {
+            const point = polygon.points[pointIndex];
+            if (calculateDistance(point, { x, y }) < SOME_THRESHOLD) {
+              return {
+                polygonIndex,
+                pointIndex,
+              };
+            }
           }
         }
       }
@@ -305,6 +342,7 @@ function Polygon({ polygonClasses }) {
     },
     [completedPolygons]
   );
+
   const handleMouseDown = useCallback(
     async (event) => {
       setIsMousePressed(true);

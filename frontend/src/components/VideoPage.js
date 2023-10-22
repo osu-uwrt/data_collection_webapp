@@ -575,7 +575,11 @@ function VideoPage() {
                     height: `${data.video_height * scale}px`, // Adjusted height
                   }}
                 />
-                <Polygon polygonClasses={classBoxes} />
+                <Polygon
+                  polygonClasses={classBoxes}
+                  selected={selected}
+                  setSelected={setSelected}
+                />
               </div>
             </div>
 
