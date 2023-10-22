@@ -53,7 +53,17 @@ function useShiftKeyPress() {
 
   return isShiftDown;
 }
-function Polygon({ polygonClasses, selected, setSelected }) {
+function Polygon({
+  videoWidth,
+  videoHeight,
+  currentFrame,
+  framePolygons,
+  setFramePolygons,
+  polygonClasses,
+  selected,
+  setSelected,
+  showLabels,
+}) {
   const [mousePosition, setMousePosition] = useState(null);
   const isShiftDown = useShiftKeyPress();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -61,11 +71,12 @@ function Polygon({ polygonClasses, selected, setSelected }) {
   const [snackbarSeverity, setSnackbarSeverity] = useState("error");
   const [isMousePressed, setIsMousePressed] = useState(false);
   const [hoveringOverFirstPoint, setHoveringOverFirstPoint] = useState(false);
-  const isDrawingEnabled = false;
+  const isDrawingEnabled = true;
   const canvasRef = useRef(null);
   const [points, setPoints] = useState([]);
   const [completedPolygons, setCompletedPolygons] = useState([]);
   const [movingPoint, setMovingPoint] = useState(null);
+  const [previousLength, setPreviousLength] = useState(0);
 
   const handleSnackbarClose = (event, reason) => {
     if (reason === "clickaway") {
@@ -78,6 +89,50 @@ function Polygon({ polygonClasses, selected, setSelected }) {
     setSnackbarMessage(message);
     setSnackbarSeverity(severity);
     setSnackbarOpen(true);
+  };
+
+  useEffect(() => {
+    console.log("Frame ", currentFrame);
+    let updated = false;
+    const newFrameBoxes = { ...framePolygons };
+
+    for (let frame in framePolygons) {
+      if (framePolygons[frame] === undefined) {
+        newFrameBoxes[frame] = [];
+        updated = true;
+      }
+    }
+
+    if (updated) {
+      console.log("ABBA");
+      setFramePolygons(newFrameBoxes);
+    }
+
+    if (framePolygons[currentFrame] !== undefined) {
+      setCompletedPolygons(framePolygons[currentFrame]);
+    } else {
+      setCompletedPolygons([]);
+    }
+  }, [currentFrame, framePolygons]);
+
+  useEffect(() => {
+    if (completedPolygons.length < 1) {
+      canvasRef.current.style.cursor = "default";
+    }
+    if (completedPolygons && completedPolygons.length !== previousLength) {
+      console.log("UPDATED");
+      updateFramePolygonsWithCurrentFrame();
+    }
+
+    // Update the ref value
+    setPreviousLength(completedPolygons.length);
+  }, [currentFrame, completedPolygons, framePolygons]);
+
+  const updateFramePolygonsWithCurrentFrame = () => {
+    setFramePolygons((prev) => ({
+      ...prev,
+      [currentFrame]: completedPolygons,
+    }));
   };
 
   useEffect(() => {
@@ -127,10 +182,10 @@ function Polygon({ polygonClasses, selected, setSelected }) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
-      canvas.width = CANVAS_WIDTH;
-      canvas.height = CANVAS_HEIGHT;
+      canvas.width = videoWidth;
+      canvas.height = videoHeight;
     }
-  }, []);
+  }, [videoWidth, videoHeight]);
 
   useEffect(() => {
     const ctx = canvasRef.current.getContext("2d");
@@ -288,9 +343,13 @@ function Polygon({ polygonClasses, selected, setSelected }) {
             class: "class1",
             displayOrder: prevPolygons.length,
             visible: true,
+            interpolate: null,
+            interpolationNumber: null,
+            interpolationID: null,
           },
           ...prevPolygons,
         ]);
+
         setPoints([]);
       }
     });
@@ -356,6 +415,7 @@ function Polygon({ polygonClasses, selected, setSelected }) {
       }
 
       if (isDrawingEnabled) {
+        console.log("A");
         handleDrawingMouseDown(x, y);
       } else {
         const pointToMove = findPointNearMouse(x, y);
@@ -386,8 +446,8 @@ function Polygon({ polygonClasses, selected, setSelected }) {
     <>
       <canvas
         ref={canvasRef}
-        width={CANVAS_WIDTH}
-        height={CANVAS_HEIGHT}
+        width={videoWidth}
+        height={videoHeight}
         style={{ position: "absolute", top: 0, left: 0 }}
       />
       <Snackbar
