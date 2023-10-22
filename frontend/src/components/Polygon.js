@@ -241,13 +241,48 @@ function Polygon({
         ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
         ctx.fill();
       });
+
+      if (showLabels && polygon.points.length > 0) {
+        // Calculate centroid or other position for the label
+        const centroid = polygon.points.reduce(
+          (acc, point) => ({
+            x: acc.x + point.x / polygon.points.length,
+            y: acc.y + point.y / polygon.points.length,
+          }),
+          { x: 0, y: 0 }
+        );
+
+        const label = polygon.class || "default";
+        ctx.font = "14px Arial";
+        const metrics = ctx.measureText(label);
+        const labelWidth = metrics.width + 10;
+        const labelHeight = 20;
+
+        // Adjust position as needed
+        const labelX = centroid.x - labelWidth / 2;
+        const labelY = centroid.y - labelHeight / 2;
+
+        // Render label background
+        ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+        ctx.fillRect(labelX, labelY, labelWidth, labelHeight);
+
+        // Render label text
+        ctx.fillStyle = "white";
+        ctx.shadowColor = "black";
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 1;
+        ctx.shadowBlur = 2;
+        ctx.globalAlpha = 1;
+        ctx.fillText(label, labelX + 5, labelY + 15);
+        ctx.shadowColor = "transparent";
+        ctx.globalAlpha = 0.3;
+      }
     });
 
     // Draw in-progress polygon (if any points are present)
     if (points.length) {
       ctx.strokeStyle = "white";
       ctx.fillStyle = "white";
-      ctx.globalAlpha = 0.3;
 
       ctx.beginPath();
       ctx.moveTo(points[0].x, points[0].y);
@@ -266,7 +301,7 @@ function Polygon({
         ctx.fill();
       }
 
-      ctx.globalAlpha = 0.3; // Reset alpha for stroke to match completed polygons
+      ctx.globalAlpha = 1; // Reset alpha for stroke to match completed polygons
       ctx.stroke();
 
       if (points.length > 2) {
@@ -286,7 +321,7 @@ function Polygon({
         ctx.fill();
       });
     }
-  }, [points, completedPolygons, mousePosition, polygonClasses]);
+  }, [points, completedPolygons, mousePosition, polygonClasses, showLabels]);
 
   function unkinkCurrentPolygon(points) {
     let currentPolygon = convertPointsToCoordinates(points);
@@ -337,18 +372,22 @@ function Polygon({
           showSnackbar("Polygon was unkinked!", "info");
         }
 
-        setCompletedPolygons((prevPolygons) => [
-          {
-            points: newPoints,
-            class: "class1",
-            displayOrder: prevPolygons.length,
-            visible: true,
-            interpolate: null,
-            interpolationNumber: null,
-            interpolationID: null,
-          },
-          ...prevPolygons,
-        ]);
+        setCompletedPolygons((prevPolygons) => {
+          const newDisplayOrder = prevPolygons.length;
+
+          return [
+            {
+              points: newPoints,
+              class: "class1",
+              displayOrder: newDisplayOrder,
+              visible: true,
+              interpolate: null,
+              interpolationNumber: null,
+              interpolationID: null,
+            },
+            ...prevPolygons,
+          ];
+        });
 
         setPoints([]);
       }
