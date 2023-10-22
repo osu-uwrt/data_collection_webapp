@@ -46,7 +46,7 @@ function useShiftKeyPress() {
 
   return isShiftDown;
 }
-function Polygon() {
+function Polygon({ polygonClasses }) {
   const [mousePosition, setMousePosition] = useState(null);
   const isShiftDown = useShiftKeyPress();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -54,7 +54,7 @@ function Polygon() {
   const [snackbarSeverity, setSnackbarSeverity] = useState("error");
   const [isMousePressed, setIsMousePressed] = useState(false);
   const [hoveringOverFirstPoint, setHoveringOverFirstPoint] = useState(false);
-  const isDrawingEnabled = false;
+  const isDrawingEnabled = true;
   const canvasRef = useRef(null);
   const [points, setPoints] = useState([]);
   const [completedPolygons, setCompletedPolygons] = useState([]);
@@ -74,7 +74,8 @@ function Polygon() {
   };
 
   useEffect(() => {
-    console.log(completedPolygons);
+    console.log("A", completedPolygons);
+    console.log("B", polygonClasses["class1"]);
   }, [completedPolygons]);
 
   const handleMouseMove = useCallback(
@@ -107,8 +108,9 @@ function Polygon() {
       }
       if (movingPoint && !isDrawingEnabled) {
         const newCompletedPolygons = [...completedPolygons];
-        newCompletedPolygons[movingPoint.polygonIndex][movingPoint.pointIndex] =
-          { x, y };
+        newCompletedPolygons[movingPoint.polygonIndex].points[
+          movingPoint.pointIndex
+        ] = { x, y };
         setCompletedPolygons(newCompletedPolygons);
       }
     },
@@ -125,36 +127,48 @@ function Polygon() {
 
   useEffect(() => {
     const ctx = canvasRef.current.getContext("2d");
-    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
     ctx.lineWidth = 2;
-    // Define default colors
-    let strokeColor = "white";
-    let fillColor = "white";
-
-    // Check if the current polygon is simple or not
-    if (points.length > 2) {
-      const currentPolygon = convertPointsToCoordinates(points);
-      currentPolygon.push([points[0].x, points[0].y]); // Close the polygon
-    }
-
-    ctx.strokeStyle = strokeColor;
-    ctx.fillStyle = fillColor;
-    ctx.globalAlpha = 0.3;
 
     // Draw completed polygons
-    completedPolygons.forEach((polygon) => {
-      ctx.beginPath();
-      ctx.moveTo(polygon[0].x, polygon[0].y);
-      polygon.forEach((point) => {
-        ctx.lineTo(point.x, point.y);
-      });
-      ctx.closePath(); // Close the path to complete the polygon
-      ctx.stroke();
-      ctx.fill();
-    });
+    completedPolygons
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .forEach((polygon) => {
+        if (polygon.visible) {
+          const polygonClass = polygon.class || "default";
+          const { strokeColor } = polygonClasses[polygonClass] || {};
 
-    // Draw current points
+          ctx.strokeStyle = strokeColor || "white";
+          ctx.fillStyle = strokeColor || "white";
+          ctx.globalAlpha = 0.3;
+
+          ctx.beginPath();
+          ctx.moveTo(polygon.points[0].x, polygon.points[0].y);
+          polygon.points.forEach((point) => {
+            ctx.lineTo(point.x, point.y);
+          });
+          ctx.closePath();
+          ctx.stroke();
+          ctx.fill();
+
+          // Draw circles in specific color
+          ctx.fillStyle = strokeColor || "white";
+          ctx.globalAlpha = 0.75;
+          polygon.points.forEach((point) => {
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        }
+      });
+
+    // Draw in-progress polygon (if any points are present)
     if (points.length) {
+      ctx.strokeStyle = "white";
+      ctx.fillStyle = "white";
+      ctx.globalAlpha = 0.3;
+
       ctx.beginPath();
       ctx.moveTo(points[0].x, points[0].y);
       points.forEach((point) => {
@@ -169,11 +183,10 @@ function Polygon() {
         } else {
           ctx.globalAlpha = 0.1;
         }
-        // Lower the alpha to give a "preview" effect
         ctx.fill();
-        ctx.globalAlpha = 0.3; // Reset alpha for subsequent drawing
       }
 
+      ctx.globalAlpha = 0.3; // Reset alpha for stroke to match completed polygons
       ctx.stroke();
 
       if (points.length > 2) {
@@ -184,18 +197,16 @@ function Polygon() {
           ctx.closePath(); // If the polygon is about to be completed, close the path
         }
       }
+
+      // Draw circles in white for in-progress polygon
+      ctx.globalAlpha = 0.75;
+      points.forEach((point) => {
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+      });
     }
-
-    // Draw small circles on each point (for both completed polygons and current points)
-    const drawCircle = (point) => {
-      ctx.beginPath();
-      ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
-      ctx.fill();
-    };
-
-    points.forEach(drawCircle);
-    completedPolygons.flat().forEach(drawCircle);
-  }, [points, completedPolygons, mousePosition]);
+  }, [points, completedPolygons, mousePosition, polygonClasses]);
 
   function unkinkCurrentPolygon(points) {
     let currentPolygon = convertPointsToCoordinates(points);
@@ -246,7 +257,15 @@ function Polygon() {
           showSnackbar("Polygon was unkinked!", "info");
         }
 
-        setCompletedPolygons((prevPolygons) => [newPoints, ...prevPolygons]);
+        setCompletedPolygons((prevPolygons) => [
+          {
+            points: newPoints,
+            class: "class1",
+            displayOrder: prevPolygons.length,
+            visible: true,
+          },
+          ...prevPolygons,
+        ]);
         setPoints([]);
       }
     });

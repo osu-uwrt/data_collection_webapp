@@ -17,6 +17,7 @@ import { updateInterpolationNumbers } from "./utils";
 import Slide from "@mui/material/Slide";
 import Alert from "@mui/material/Alert";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import Polygon from "./Polygon";
 
 function TransitionRight(props) {
   return <Slide {...props} direction="right" />;
@@ -574,21 +575,7 @@ function VideoPage() {
                     height: `${data.video_height * scale}px`, // Adjusted height
                   }}
                 />
-                <BoundingBox
-                  videoWidth={data.video_width * scale}
-                  videoHeight={data.video_height * scale}
-                  currentFrame={currentFrame}
-                  frameBoxes={frameBoxes}
-                  setFrameBoxes={setFrameBoxes}
-                  onDeleteRef={deleteRef}
-                  carryBoxes={carryBoxes}
-                  boxClasses={classBoxes}
-                  showLabels={showLabels}
-                  runInterpolation={runInterpolation}
-                  onInterpolationCompleted={onInterpolationCompleted}
-                  selected={selected}
-                  setSelected={setSelected}
-                />
+                <Polygon polygonClasses={classBoxes} />
               </div>
             </div>
 
