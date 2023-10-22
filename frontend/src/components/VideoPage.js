@@ -1,23 +1,29 @@
+// External library imports
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import ReactDOM from "react-dom";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import BoundingBox from "./BoundingBox";
-import LabelMenu from "./LabelMenu";
+
+// MUI imports
 import Snackbar from "@mui/material/Snackbar";
+import Slider from "@mui/material/Slider";
+import Slide from "@mui/material/Slide";
+import Alert from "@mui/material/Alert";
 import SaveIcon from "@mui/icons-material/Save";
 import RepeatIcon from "@mui/icons-material/Repeat";
 import LabelIcon from "@mui/icons-material/Label";
-import Slider from "@mui/material/Slider";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import LineStyleIcon from "@mui/icons-material/LineStyle";
+import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { updateInterpolationNumbers } from "./utils";
-import Slide from "@mui/material/Slide";
-import Alert from "@mui/material/Alert";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+
+// Internal file imports
+import BoundingBox from "./BoundingBox";
+import LabelMenu from "./LabelMenu";
 import Polygon from "./Polygon";
+import { updateInterpolationNumbers } from "./utils";
 
 function TransitionRight(props) {
   return <Slide {...props} direction="right" />;
@@ -47,6 +53,7 @@ function VideoPage() {
   const [loading, setLoading] = useState(true);
   const deleteRef = useRef(null);
   const [showLabels, setShowLabels] = useState(true);
+  const [drawPolygons, setDrawPolygons] = useState(true);
   const [runInterpolation, setRunInterpolation] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -559,6 +566,17 @@ function VideoPage() {
                   }}
                 />
               </button>
+              <button
+                className="icon-button"
+                onClick={() => setDrawPolygons(!drawPolygons)}
+                title="Toggle Polygon Drawing"
+              >
+                <EditIcon
+                  style={{
+                    color: drawPolygons ? "var(--highlight-text)" : "gray",
+                  }}
+                />
+              </button>
             </div>
 
             <div className="main-content">
@@ -592,6 +610,7 @@ function VideoPage() {
                   setFramePolygons={setFramePolygons}
                   selected={selected}
                   setSelected={setSelected}
+                  isDrawingEnabled={drawPolygons}
                 />
               </div>
             </div>

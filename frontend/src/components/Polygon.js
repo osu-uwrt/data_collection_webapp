@@ -60,9 +60,12 @@ function Polygon({
   framePolygons,
   setFramePolygons,
   polygonClasses,
+  showLabels,
+  runInterpolation,
+  onInterpolationCompleted,
   selected,
   setSelected,
-  showLabels,
+  isDrawingEnabled,
 }) {
   const [mousePosition, setMousePosition] = useState(null);
   const isShiftDown = useShiftKeyPress();
@@ -71,7 +74,6 @@ function Polygon({
   const [snackbarSeverity, setSnackbarSeverity] = useState("error");
   const [isMousePressed, setIsMousePressed] = useState(false);
   const [hoveringOverFirstPoint, setHoveringOverFirstPoint] = useState(false);
-  const isDrawingEnabled = true;
   const canvasRef = useRef(null);
   const [points, setPoints] = useState([]);
   const [completedPolygons, setCompletedPolygons] = useState([]);
@@ -90,6 +92,33 @@ function Polygon({
     setSnackbarSeverity(severity);
     setSnackbarOpen(true);
   };
+
+  useEffect(() => {
+    setSelected(null);
+  }, [currentFrame, isDrawingEnabled]);
+
+  const toggleBoxVisibility = useCallback(() => {
+    if (selected !== null) {
+      const updatedBoxesForFrame = [...completedPolygons];
+      updatedBoxesForFrame[selected].visible =
+        !updatedBoxesForFrame[selected].visible;
+      setCompletedPolygons(updatedBoxesForFrame);
+    }
+    updateFramePolygonsWithCurrentFrame();
+  }, [selected, completedPolygons]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "v" || event.key === "V") {
+        toggleBoxVisibility();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [toggleBoxVisibility]);
 
   useEffect(() => {
     console.log("Frame ", currentFrame);
@@ -121,6 +150,7 @@ function Polygon({
     }
     if (completedPolygons && completedPolygons.length !== previousLength) {
       console.log("UPDATED");
+      setSelected(null);
       updateFramePolygonsWithCurrentFrame();
     }
 
@@ -196,11 +226,15 @@ function Polygon({
     const polygonsForRendering = [...(completedPolygons || [])].filter(
       (polygon) => polygon.visible
     );
+    console.log("AAAAAAAAAAAA");
 
     const sortedPolygons = polygonsForRendering.sort(
       (a, b) => b.displayOrder - a.displayOrder
     );
-
+    if (isDrawingEnabled) {
+      ctx.setLineDash([]);
+      ctx.strokeStyle = "white";
+    }
     // Draw completed polygons
     sortedPolygons.forEach((polygon, index) => {
       const polygonClass = polygon.class || "default";
@@ -213,7 +247,7 @@ function Polygon({
       );
       const isPolygonSelected = index === positionAfterSorting;
 
-      if (isPolygonSelected) {
+      if (isPolygonSelected && !isDrawingEnabled) {
         ctx.setLineDash([5, 5]);
         ctx.strokeStyle = strokeColor || "white";
       } else {
@@ -252,7 +286,12 @@ function Polygon({
           { x: 0, y: 0 }
         );
 
-        const label = polygon.class || "default";
+        let label = polygon.class || "default";
+
+        if (polygon.interpolate) {
+          label += ` (${polygon.interpolationNumber || "N/A"})`;
+        }
+
         ctx.font = "14px Arial";
         const metrics = ctx.measureText(label);
         const labelWidth = metrics.width + 10;
@@ -321,7 +360,14 @@ function Polygon({
         ctx.fill();
       });
     }
-  }, [points, completedPolygons, mousePosition, polygonClasses, showLabels]);
+  }, [
+    points,
+    completedPolygons,
+    mousePosition,
+    polygonClasses,
+    showLabels,
+    selected,
+  ]);
 
   function unkinkCurrentPolygon(points) {
     let currentPolygon = convertPointsToCoordinates(points);
@@ -394,6 +440,41 @@ function Polygon({
     });
   }, [points]);
 
+  const handleMouseClick = (event) => {
+    const x = event.offsetX;
+    const y = event.offsetY;
+    const clickedPoint = point([x, y]);
+
+    let selectedIndex = -1;
+
+    for (let i = 0; i < completedPolygons.length; i++) {
+      if (completedPolygons[i].visible) {
+        const polygonPoints = convertPointsToCoordinates(
+          completedPolygons[i].points
+        );
+
+        // Ensure there are at least three vertices
+        if (polygonPoints.length < 3) continue;
+
+        // Close the polygon by adding the first point to the end
+        const closedPolygonPoints = [...polygonPoints, polygonPoints[0]];
+
+        const currentPolygon = polygon([closedPolygonPoints]);
+
+        if (booleanPointInPolygon(clickedPoint, currentPolygon)) {
+          selectedIndex = i;
+          break;
+        }
+      }
+    }
+
+    if (selectedIndex !== -1) {
+      setSelected(selectedIndex);
+    } else {
+      setSelected(null); // deselect if no polygon is clicked
+    }
+  };
+
   const handleDrawingMouseDown = useCallback(
     (x, y) => {
       const firstPoint = points[0];
@@ -461,6 +542,7 @@ function Polygon({
         if (pointToMove) {
           setMovingPoint(pointToMove);
         }
+        handleMouseClick(event);
       }
     },
     [isDrawingEnabled, handleDrawingMouseDown, findPointNearMouse]

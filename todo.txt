@@ -1,20 +1,46 @@
-Fix JWT to update on Register so user doesnt need to re login
-Fix JWT to update on register Team
+Add polygon mode '[]'
+
+
+
+
+
 Work on team dashboard
-Upload video
+
+Team
 Team owner controls
 Team admins?
+
 Team collab
 
+TeamDashboard
+Manage Team by Owner/admins
 
 
 Undo/Redo on BBox
 
+Register team
+Add logo optional
 
 
+Add video
+- Fix choose file button update
+- 
 
 file sharing?
 zipping processed files?
 
 
+
+PROD TODO
 remove artificial timeout for prod
+
+
+
+Polygon
+
+dont select when moving point
+get/post
+interpolate
+fix polygons on resize? Or just warn? check?
+ctrl to toggle draw mode?
+
