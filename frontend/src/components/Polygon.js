@@ -66,6 +66,7 @@ function Polygon({
   selected,
   setSelected,
   isDrawingEnabled,
+  setIsDrawingEnabled,
 }) {
   const [mousePosition, setMousePosition] = useState(null);
   const isShiftDown = useShiftKeyPress();
@@ -96,6 +97,14 @@ function Polygon({
   useEffect(() => {
     setSelected(null);
   }, [currentFrame, isDrawingEnabled]);
+
+  useEffect(() => {
+    if (isDrawingEnabled) {
+      canvasRef.current.style.cursor = "crosshair";
+    } else {
+      canvasRef.current.style.cursor = "default";
+    }
+  }, [isDrawingEnabled]);
 
   const toggleBoxVisibility = useCallback(() => {
     if (selected !== null) {
@@ -436,6 +445,7 @@ function Polygon({
         });
 
         setPoints([]);
+        setIsDrawingEnabled(false);
       }
     });
   }, [points]);

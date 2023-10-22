@@ -611,6 +611,7 @@ function VideoPage() {
                   selected={selected}
                   setSelected={setSelected}
                   isDrawingEnabled={drawPolygons}
+                  setIsDrawingEnabled={setDrawPolygons}
                 />
               </div>
             </div>

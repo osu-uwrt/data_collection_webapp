@@ -38,9 +38,14 @@ remove artificial timeout for prod
 
 Polygon
 
-dont select when moving point
+
 get/post
 interpolate
 fix polygons on resize? Or just warn? check?
 ctrl to toggle draw mode?
+
+Not in draw mode:
+right click point to remove, then autofill between 2 outer points if points > 3?
+draw ontop of poly to merge 2 polygons like cvat?
+dont select when moving point
 
