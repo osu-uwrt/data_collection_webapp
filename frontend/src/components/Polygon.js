@@ -106,6 +106,98 @@ function Polygon({
     }
   }, [isDrawingEnabled]);
 
+  useEffect(() => {
+    if (runInterpolation) {
+      console.log("AAAAAAAAAA");
+      if (validateInterpolation(framePolygons)) {
+        performInterpolation(framePolygons);
+        resetInterpolationFlags(framePolygons);
+
+        setSnackbarMessage(`Interpolation successful!`);
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+      } else {
+        console.log("Invalid Interpolation");
+      }
+      if (onInterpolationCompleted) {
+        console.log("Interpolation Completed");
+        onInterpolationCompleted();
+      }
+    }
+  }, [runInterpolation]);
+
+  const resetInterpolationFlags = (framePolygons) => {
+    for (let frame in framePolygons) {
+      framePolygons[frame].forEach((box) => {
+        box.interpolate = false;
+        box.interpolationNumber = null;
+        box.interpolationID = null;
+      });
+    }
+  };
+
+  const validateInterpolation = (framePolygons) => {
+    let activeInterpolationFrames = [];
+    let activeInterpolationSignatures = {};
+
+    for (let frame in framePolygons) {
+      const boxes = framePolygons[frame].filter((box) => box.interpolate);
+      if (boxes.length > 0) {
+        activeInterpolationFrames.push(frame);
+
+        let frameSignature = boxes
+          .map((box) => {
+            return `${box.class}_${box.interpolationNumber}_${box.interpolationID}`;
+          })
+          .sort()
+          .join(",");
+
+        activeInterpolationSignatures[frame] = frameSignature;
+      }
+    }
+
+    if (activeInterpolationFrames.length < 2) {
+      setSnackbarMessage(
+        "Interpolation failed: Less than 2 frames have boxes flagged for interpolation."
+      );
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      return false;
+    }
+
+    let referenceFrame = activeInterpolationFrames[0];
+    let referenceSignature = activeInterpolationSignatures[referenceFrame];
+    let referenceSignaturesSet = new Set(referenceSignature.split(","));
+
+    for (let frame of activeInterpolationFrames.slice(1)) {
+      const currentBoxesSignature =
+        activeInterpolationSignatures[frame].split(",");
+      const currentSignatureSet = new Set(currentBoxesSignature);
+
+      if (referenceSignaturesSet.size !== currentSignatureSet.size) {
+        setSnackbarMessage(
+          `Interpolation failed: Inconsistent number of boxes flagged for interpolation. Found ${referenceSignaturesSet.size} on frame ${referenceFrame} and ${currentSignatureSet.size} on frame ${frame}.`
+        );
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+        return false;
+      }
+
+      for (let signature of referenceSignaturesSet) {
+        if (!currentSignatureSet.has(signature)) {
+          setSnackbarMessage(
+            `Interpolation failed: Mismatch in classes of boxes flagged for interpolation between frame ${referenceFrame} and frame ${frame}.`
+          );
+          setSnackbarSeverity("error");
+          setSnackbarOpen(true);
+          return false;
+        }
+      }
+    }
+
+    return true;
+  };
+
   const toggleBoxVisibility = useCallback(() => {
     if (selected !== null) {
       const updatedBoxesForFrame = [...completedPolygons];
@@ -178,6 +270,131 @@ function Polygon({
     console.log("A", completedPolygons);
     console.log("B", polygonClasses["class1"]);
   }, [completedPolygons]);
+
+  function pairPoints(startPoints, endPoints) {
+    let pairs = [];
+    let potentialPairs = [];
+
+    // Find all potential pairs and their distances.
+    startPoints.forEach((startPoint, startIndex) => {
+      endPoints.forEach((endPoint, endIndex) => {
+        const distance = Math.hypot(
+          endPoint.x - startPoint.x,
+          endPoint.y - startPoint.y
+        );
+        potentialPairs.push({
+          startIndex,
+          endIndex,
+          distance,
+        });
+      });
+    });
+
+    // Sort potential pairs by distance, smallest first.
+    potentialPairs.sort((a, b) => a.distance - b.distance);
+
+    let usedStartIndexes = new Set();
+    let usedEndIndexes = new Set();
+
+    // Iterate over sorted potential pairs and create pairs based on the closest available match.
+    potentialPairs.forEach((pair) => {
+      if (
+        !usedStartIndexes.has(pair.startIndex) &&
+        !usedEndIndexes.has(pair.endIndex)
+      ) {
+        usedStartIndexes.add(pair.startIndex);
+        usedEndIndexes.add(pair.endIndex);
+        pairs.push({
+          startIndex: pair.startIndex,
+          endIndex: pair.endIndex,
+        });
+      }
+    });
+
+    return pairs;
+  }
+
+  const performInterpolation = (framePolygons) => {
+    const sortedFrames = Object.keys(framePolygons).sort(
+      (a, b) => parseInt(a) - parseInt(b)
+    );
+    let startFrame = null;
+
+    for (let i = 0; i < sortedFrames.length; i++) {
+      const frame = sortedFrames[i];
+      if (framePolygons[frame].some((polygon) => polygon.interpolate)) {
+        if (startFrame === null) {
+          startFrame = frame;
+        } else {
+          const endFrame = frame;
+
+          framePolygons[startFrame].forEach((startPolygon) => {
+            if (!startPolygon.interpolate) {
+              return;
+            }
+
+            const endPolygon = framePolygons[endFrame].find(
+              (polygon) =>
+                polygon.interpolationID === startPolygon.interpolationID &&
+                polygon.interpolate
+            );
+
+            if (!endPolygon) {
+              return;
+            }
+
+            // Pair points
+            const pointPairs = pairPoints(
+              startPolygon.points,
+              endPolygon.points
+            );
+
+            for (let j = parseInt(startFrame) + 1; j < endFrame; j++) {
+              if (!framePolygons[j]) {
+                framePolygons[j] = [];
+              }
+
+              const alpha = (j - startFrame) / (endFrame - startFrame);
+              const interpolatedPoints = pointPairs.map((pair) => {
+                const startPoint = startPolygon.points[pair.startIndex];
+                const endPoint = endPolygon.points[pair.endIndex];
+                const alpha = (j - startFrame) / (endFrame - startFrame);
+                return {
+                  x: startPoint.x + alpha * (endPoint.x - startPoint.x),
+                  y: startPoint.y + alpha * (endPoint.y - startPoint.y),
+                };
+              });
+
+              const interpolatedPolygon = {
+                points: interpolatedPoints,
+                class: startPolygon.class,
+                displayOrder: startPolygon.displayOrder,
+                visible: startPolygon.visible,
+                interpolate: false,
+                interpolationNumber: null,
+                interpolationID: startPolygon.interpolationID,
+              };
+
+              const correctIndex = framePolygons[j].findIndex(
+                (polygon) =>
+                  polygon.interpolationID ===
+                  interpolatedPolygon.interpolationID
+              );
+
+              if (correctIndex === -1) {
+                framePolygons[j].push(interpolatedPolygon);
+              } else {
+                framePolygons[j][correctIndex] = interpolatedPolygon;
+              }
+            }
+          });
+
+          startFrame = endFrame;
+        }
+      }
+    }
+    return framePolygons;
+  };
 
   const handleMouseMove = useCallback(
     (event) => {

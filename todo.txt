@@ -1,11 +1,10 @@
-Add polygon mode '[]'
 
 
 
 
 
 Work on team dashboard
-
+Invite Only
 Team
 Team owner controls
 Team admins?
@@ -36,7 +35,13 @@ remove artificial timeout for prod
 
 
 
-Polygon
+BBOX+Polygon wishlist:
+undo/Redo
+zoom
+
+
+
+Polygon:
 
 
 get/post

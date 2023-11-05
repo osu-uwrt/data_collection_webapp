@@ -610,6 +610,8 @@ function VideoPage() {
                   setFramePolygons={setFramePolygons}
                   selected={selected}
                   setSelected={setSelected}
+                  runInterpolation={runInterpolation}
+                  onInterpolationCompleted={onInterpolationCompleted}
                   isDrawingEnabled={drawPolygons}
                   setIsDrawingEnabled={setDrawPolygons}
                 />
