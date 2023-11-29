@@ -108,7 +108,6 @@ function Polygon({
 
   useEffect(() => {
     if (runInterpolation) {
-      console.log("AAAAAAAAAA");
       if (validateInterpolation(framePolygons)) {
         performInterpolation(framePolygons);
         resetInterpolationFlags(framePolygons);
@@ -117,10 +116,8 @@ function Polygon({
         setSnackbarSeverity("success");
         setSnackbarOpen(true);
       } else {
-        console.log("Invalid Interpolation");
       }
       if (onInterpolationCompleted) {
-        console.log("Interpolation Completed");
         onInterpolationCompleted();
       }
     }
@@ -222,7 +219,6 @@ function Polygon({
   }, [toggleBoxVisibility]);
 
   useEffect(() => {
-    console.log("Frame ", currentFrame);
     let updated = false;
     const newFrameBoxes = { ...framePolygons };
 
@@ -234,7 +230,6 @@ function Polygon({
     }
 
     if (updated) {
-      console.log("ABBA");
       setFramePolygons(newFrameBoxes);
     }
 
@@ -250,7 +245,6 @@ function Polygon({
       canvasRef.current.style.cursor = "default";
     }
     if (completedPolygons && completedPolygons.length !== previousLength) {
-      console.log("UPDATED");
       setSelected(null);
       updateFramePolygonsWithCurrentFrame();
     }
@@ -266,50 +260,128 @@ function Polygon({
     }));
   };
 
-  useEffect(() => {
-    console.log("A", completedPolygons);
-    console.log("B", polygonClasses["class1"]);
-  }, [completedPolygons]);
+  useEffect(() => {}, [completedPolygons]);
 
   function pairPoints(startPoints, endPoints) {
     let pairs = [];
-    let potentialPairs = [];
 
-    // Find all potential pairs and their distances.
-    startPoints.forEach((startPoint, startIndex) => {
-      endPoints.forEach((endPoint, endIndex) => {
-        const distance = Math.hypot(
-          endPoint.x - startPoint.x,
-          endPoint.y - startPoint.y
-        );
-        potentialPairs.push({
-          startIndex,
-          endIndex,
-          distance,
+    function generatePairs() {
+      let potentialPairs = [];
+      startPoints.forEach((startPoint, startIndex) => {
+        endPoints.forEach((endPoint, endIndex) => {
+          const distance = Math.hypot(
+            endPoint.x - startPoint.x,
+            endPoint.y - startPoint.y
+          );
+          potentialPairs.push({ startIndex, endIndex, distance });
         });
       });
-    });
 
-    // Sort potential pairs by distance, smallest first.
-    potentialPairs.sort((a, b) => a.distance - b.distance);
+      potentialPairs.sort((a, b) => a.distance - b.distance);
 
-    let usedStartIndexes = new Set();
-    let usedEndIndexes = new Set();
+      let usedStartIndexes = new Set();
+      let usedEndIndexes = new Set();
 
-    // Iterate over sorted potential pairs and create pairs based on the closest available match.
-    potentialPairs.forEach((pair) => {
-      if (
-        !usedStartIndexes.has(pair.startIndex) &&
-        !usedEndIndexes.has(pair.endIndex)
-      ) {
-        usedStartIndexes.add(pair.startIndex);
-        usedEndIndexes.add(pair.endIndex);
-        pairs.push({
-          startIndex: pair.startIndex,
-          endIndex: pair.endIndex,
-        });
+      potentialPairs.forEach((pair) => {
+        if (
+          !usedStartIndexes.has(pair.startIndex) &&
+          !usedEndIndexes.has(pair.endIndex)
+        ) {
+          usedStartIndexes.add(pair.startIndex);
+          usedEndIndexes.add(pair.endIndex);
+          pairs[pair.startIndex] = {
+            startIndex: pair.startIndex,
+            endIndex: pair.endIndex,
+          };
+        }
+      });
+
+      return { usedStartIndexes, usedEndIndexes };
+    }
+
+    let { usedStartIndexes, usedEndIndexes } = generatePairs();
+
+    // Handle orphan points by creating new points on the closest edge of the opposite polygon
+    function createPointOnEdge(orphanPoint, polygonPoints) {
+      let closestPoint = null;
+      let closestDistance = Infinity;
+      let closestSegmentIndex = -1;
+
+      // Function to project a point onto a line segment and get the closest point on the segment
+      function projectPointOnSegment(px, py, x1, y1, x2, y2) {
+        let l2 = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
+        if (l2 === 0) return { x: x1, y: y1 };
+        let t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / l2;
+        if (t < 0) return { x: x1, y: y1 };
+        if (t > 1) return { x: x2, y: y2 };
+        return { x: x1 + t * (x2 - x1), y: y1 + t * (y2 - y1) };
       }
-    });
+
+      // Iterate over each edge in the polygon
+      for (let i = 0; i < polygonPoints.length; i++) {
+        let start = polygonPoints[i];
+        let end = polygonPoints[(i + 1) % polygonPoints.length]; // wrap around to first point
+
+        // Find the closest point on the current segment
+        let projectedPoint = projectPointOnSegment(
+          orphanPoint.x,
+          orphanPoint.y,
+          start.x,
+          start.y,
+          end.x,
+          end.y
+        );
+
+        // Calculate distance from the orphan point to the projected point on the segment
+        let distance = Math.hypot(
+          projectedPoint.x - orphanPoint.x,
+          projectedPoint.y - orphanPoint.y
+        );
+
+        // If this is the closest distance so far, save this point and distance
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestPoint = projectedPoint;
+          closestSegmentIndex = i;
+        }
+      }
+
+      // Return the closest point on the closest edge
+      return { point: closestPoint, insertIndex: closestSegmentIndex + 1 };
+    }
+
+    // Handling orphan points
+    let orphanHandled = false;
+
+    if (startPoints.length < endPoints.length) {
+      endPoints.forEach((point, index) => {
+        if (!usedEndIndexes.has(index)) {
+          orphanHandled = true;
+          const { point: newPoint, insertIndex } = createPointOnEdge(
+            point,
+            startPoints
+          );
+          startPoints.splice(insertIndex, 0, newPoint);
+        }
+      });
+    } else if (startPoints.length > endPoints.length) {
+      startPoints.forEach((point, index) => {
+        if (!usedStartIndexes.has(index)) {
+          orphanHandled = true;
+          const { point: newPoint, insertIndex } = createPointOnEdge(
+            point,
+            endPoints
+          );
+          endPoints.splice(insertIndex, 0, newPoint);
+        }
+      });
+    }
+
+    // Re-pair if orphan points were handled
+    if (orphanHandled) {
+      pairs = []; // Reset pairs
+      generatePairs();
+    }
 
     return pairs;
   }
@@ -354,7 +426,6 @@ function Polygon({
                 framePolygons[j] = [];
               }
 
-              const alpha = (j - startFrame) / (endFrame - startFrame);
               const interpolatedPoints = pointPairs.map((pair) => {
                 const startPoint = startPolygon.points[pair.startIndex];
                 const endPoint = endPolygon.points[pair.endIndex];
@@ -452,7 +523,6 @@ function Polygon({
     const polygonsForRendering = [...(completedPolygons || [])].filter(
       (polygon) => polygon.visible
     );
-    console.log("AAAAAAAAAAAA");
 
     const sortedPolygons = polygonsForRendering.sort(
       (a, b) => b.displayOrder - a.displayOrder
@@ -762,7 +832,6 @@ function Polygon({
       }
 
       if (isDrawingEnabled) {
-        console.log("A");
         handleDrawingMouseDown(x, y);
       } else {
         const pointToMove = findPointNearMouse(x, y);

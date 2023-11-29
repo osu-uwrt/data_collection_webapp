@@ -147,7 +147,7 @@ function VideoPage() {
 
   // Newly added state for class colors
   const [classBoxes, setClassBoxes] = useState({
-    class1: { strokeColor: "cyan", fillColor: "rgba(0, 255, 255, 0.25)" },
+    class1: { strokeColor: "red", fillColor: "rgba(255, 0, 0, 0.25)" },
     class2: { strokeColor: "limegreen", fillColor: "rgba(50, 205, 50, 0.25)" },
     class3: { strokeColor: "yellow", fillColor: "rgba(255, 255, 0, 0.25)" },
     class4: { strokeColor: "yellow", fillColor: "rgba(255, 255, 0, 0.25)" },
