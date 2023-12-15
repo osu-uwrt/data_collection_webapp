@@ -51,3 +51,48 @@ def save_boxes():
         conn.rollback()
         print("Error while saving boxes:", e)
         return jsonify({"status": "error", "message": "An error occurred while saving boxes."}), 500
+
+@app.route('/save-polygons', methods=['POST'])
+def save_polygons():
+    polygons_data = request.json
+
+    # Get video_id from payload
+    video_id = polygons_data.get('video_id')
+    if not video_id:
+        return jsonify({"status": "error", "message": "Video ID not provided!"}), 400
+
+    # Connect to the SQLite database
+    conn = get_db_conn()
+    c = conn.cursor()
+
+    # Check if the video_id already exists, if not throw an error
+    c.execute("SELECT video_id FROM Video WHERE video_id=?", (video_id,))
+    if not c.fetchone():
+        conn.close()
+        return jsonify({"status": "error", "message": f"No data found for video with ID: {video_id}"}), 404
+
+    # Start transaction
+    conn.execute('BEGIN TRANSACTION;')
+    try:
+        # Delete existing polygons for the video_id
+        c.execute("DELETE FROM Polygon WHERE video_id=?", (video_id,))
+
+        # Insert new polygons
+        for frame_number, polygons in polygons_data['polygons'].items():
+            for polygon in polygons:
+                # Convert points list to a string format
+                points_str = ';'.join(f"{point['x']},{point['y']}" for point in polygon['points'])
+                
+                c.execute('''
+                    INSERT INTO Polygon (video_id, frame_number, points, class, displayOrder, visible, interpolate, interpolationID, interpolationNumber)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (video_id, frame_number, points_str, polygon['class'], polygon['displayOrder'], polygon['visible'], polygon['interpolate'], polygon['interpolationID'], polygon['interpolationNumber']))
+
+        conn.commit()
+        conn.close()
+        return jsonify({"status": "success", "message": "Polygons saved successfully!"})
+
+    except Exception as e:
+        conn.rollback()
+        print("Error while saving polygons:", e)
+        return jsonify({"status": "error", "message": "An error occurred while saving polygons."}), 500

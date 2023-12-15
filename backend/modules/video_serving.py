@@ -3,6 +3,7 @@ import os
 import sqlite3
 from flask import send_from_directory, abort, jsonify
 from app_instance import app
+import json
 
 print("Loading video_serving module")
 
@@ -65,7 +66,48 @@ def get_boxes(video_id):
         return jsonify(boxes_data)
     else:
         return jsonify({"error": "Boxes data not found for this video"}), 404
-    
+
+@app.route('/data/frames/<int:video_id>/polygons.json', methods=['GET'])
+def get_polygons(video_id):
+    conn = get_db_conn()
+    c = conn.cursor()
+
+    c.execute('''
+        SELECT frame_number, class, displayOrder, points, interpolate, interpolationID, interpolationNumber, visible
+        FROM Polygon
+        WHERE video_id = ?
+    ''', (video_id,))
+
+    polygons_data_db = c.fetchall()
+    conn.close()
+
+    polygons_data = {"video_id": video_id, "polygons": {}}
+    for row in polygons_data_db:
+        frame_num = str(row[0])
+        if frame_num not in polygons_data["polygons"]:
+            polygons_data["polygons"][frame_num] = []
+
+        # Parsing the points string into a list of coordinate dictionaries
+        points_list = row[3].split(';')
+        points = [{'x': float(coord.split(',')[0]), 'y': float(coord.split(',')[1])} for coord in points_list if coord]
+
+        polygon_info = {
+            "class": row[1],
+            "displayOrder": row[2],
+            "points": points,  # Updated to use the parsed points
+            "interpolate": bool(row[4]),
+            "interpolationID": row[5],
+            "interpolationNumber": row[6],
+            "visible": bool(row[7])
+        }
+        polygons_data["polygons"][frame_num].append(polygon_info)
+
+    if polygons_data["polygons"]:
+        return jsonify(polygons_data)
+    else:
+        return jsonify({"error": "Polygon data not found for this video"}), 404
+
+
 @app.route('/data/classes', methods=['GET'])
 def get_classes():
     conn = get_db_conn()

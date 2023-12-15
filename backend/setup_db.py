@@ -41,6 +41,22 @@ def create_tables():
     ''')
 
     c.execute('''
+        CREATE TABLE IF NOT EXISTS Polygon (
+            polygon_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            video_id INTEGER,
+            frame_number INTEGER NOT NULL,
+            class TEXT NOT NULL,
+            displayOrder INTEGER NOT NULL,
+            points TEXT NOT NULL, 
+            interpolate BOOLEAN,
+            interpolationID INTEGER,
+            interpolationNumber INTEGER,
+            visible BOOLEAN NOT NULL,
+            FOREIGN KEY (video_id) REFERENCES Video(video_id)
+        )
+    ''')
+
+    c.execute('''
         CREATE TABLE IF NOT EXISTS Users (
             user_id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL UNIQUE,

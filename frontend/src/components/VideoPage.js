@@ -20,7 +20,6 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 
 // Internal file imports
-import BoundingBox from "./BoundingBox";
 import LabelMenu from "./LabelMenu";
 import Polygon from "./Polygon";
 import { updateInterpolationNumbers } from "./utils";
@@ -99,37 +98,50 @@ function VideoPage() {
     setFramePolygons(updatedFrameBoxes);
   };
 
-  const normalizeBoxesForSave = (boxes, videoWidth, videoHeight, scale) => {
-    const normalizedBoxes = { ...boxes };
-    for (let frame in normalizedBoxes) {
-      normalizedBoxes[frame] = normalizedBoxes[frame].map((box) => ({
-        ...box,
-        x: (box.x + box.width / 2) / scale / videoWidth,
-        y: (box.y + box.height / 2) / scale / videoHeight,
-        width: box.width / scale / videoWidth,
-        height: box.height / scale / videoHeight,
-      }));
-    }
-    return normalizedBoxes;
-  };
-
-  const scaleNormalizedBoxesOnLoad = (
-    boxes,
+  const normalizePolygonsForSave = (
+    polygons,
     videoWidth,
     videoHeight,
     scale
   ) => {
-    const scaledBoxes = { ...boxes };
-    for (let frame in scaledBoxes) {
-      scaledBoxes[frame] = scaledBoxes[frame].map((box) => ({
-        ...box,
-        x: box.x * videoWidth * scale - (box.width * videoWidth * scale) / 2,
-        y: box.y * videoHeight * scale - (box.height * videoHeight * scale) / 2,
-        width: box.width * videoWidth * scale,
-        height: box.height * videoHeight * scale,
+    const normalizedPolygons = { ...polygons };
+    for (let frame in normalizedPolygons) {
+      normalizedPolygons[frame] = normalizedPolygons[frame].map((polygon) => ({
+        ...polygon,
+        points: polygon.points.map((point) => ({
+          x: point.x / scale / videoWidth,
+          y: point.y / scale / videoHeight,
+        })),
+        // Add other necessary transformations
       }));
     }
-    return scaledBoxes;
+    return normalizedPolygons;
+  };
+
+  const scaleNormalizedPolygonsOnLoad = (
+    polygons,
+    videoWidth,
+    videoHeight,
+    scale
+  ) => {
+    const scaledPolygons = { ...polygons };
+    for (let frame in scaledPolygons) {
+      scaledPolygons[frame] = scaledPolygons[frame].map((polygon) => ({
+        ...polygon,
+        points: polygon.points.map((point) => ({
+          x: point.x * videoWidth * scale,
+          y: point.y * videoHeight * scale,
+        })),
+        // Retain other properties of the polygon as they are
+        class: polygon.class,
+        displayOrder: polygon.displayOrder,
+        interpolate: polygon.interpolate,
+        interpolationID: polygon.interpolationID,
+        interpolationNumber: polygon.interpolationNumber,
+        visible: polygon.visible,
+      }));
+    }
+    return scaledPolygons;
   };
 
   const handleSnackbarClose = (event, reason) => {
@@ -188,26 +200,26 @@ function VideoPage() {
 
       // Fetching and scaling boxes
       try {
-        const boxesResponse = await axios.get(
+        const polygonsResponse = await axios.get(
           `${BASE_URL}/data/frames/${videoId}/polygons.json`
         );
-        let boxesData = boxesResponse.data.boxes || {};
-        boxesData = scaleNormalizedBoxesOnLoad(
-          boxesData,
+        let polygonsData = polygonsResponse.data.polygons || {};
+        polygonsData = scaleNormalizedPolygonsOnLoad(
+          polygonsData,
           videoResponse.data.video_width,
           videoResponse.data.video_height,
           localScale
         );
 
         for (let i = 0; i < videoResponse.data.total_frames; i++) {
-          if (boxesData[i] === undefined) {
+          if (polygonsData[i] === undefined) {
             setFramePolygons((prev) => ({
               ...prev,
               [i]: [],
             }));
           }
         }
-        setFramePolygons(boxesData);
+        setFramePolygons(polygonsData);
       } catch (error) {
         console.error("Failed to fetch boxes data:", error);
       }
@@ -310,8 +322,9 @@ function VideoPage() {
     }));
   };
 
-  const saveBoxes = async () => {
-    const boxesToSave = normalizeBoxesForSave(
+  // Function to save polygons
+  const savePolygons = async () => {
+    const polygonsToSave = normalizePolygonsForSave(
       framePolygons,
       data.video_width,
       data.video_height,
@@ -320,23 +333,19 @@ function VideoPage() {
 
     const payload = {
       video_id: videoId,
-      video_width: data.video_width,
-      video_height: data.video_height,
-      boxes: boxesToSave,
+      polygons: polygonsToSave,
     };
 
-    console.log(payload);
     try {
       await axios.post(`${BASE_URL}/save-polygons`, payload, {
         headers: {
           "Content-Type": "application/json",
         },
       });
-      console.log("Saving", payload.boxes);
-      showSnackbar("Boxes saved successfully!", "success");
+      showSnackbar("Polygons saved successfully!", "success");
     } catch (error) {
-      console.error("Failed to save boxes:", error);
-      showSnackbar("Failed to save boxes. Please try again.", "error");
+      console.error("Failed to save polygons:", error);
+      showSnackbar("Failed to save polygons. Please try again.", "error");
     }
   };
 
@@ -543,7 +552,7 @@ function VideoPage() {
               </button>
               <button
                 className="icon-button"
-                onClick={saveBoxes}
+                onClick={savePolygons}
                 title="Save Boxes"
               >
                 <SaveIcon />
