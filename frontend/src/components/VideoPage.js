@@ -251,9 +251,11 @@ function VideoPage() {
         updateFrame(currentFrame + 1, carryBoxes);
       } else if (event.key === "Delete" || event.key === "Backspace") {
         handleDeleteClick();
+      } else if (event.key === "Control") {
+        setDrawPolygons(!drawPolygons);
       }
     },
-    [currentFrame, data.total_frames, carryBoxes, selected]
+    [currentFrame, data.total_frames, carryBoxes, selected, drawPolygons]
   );
 
   const handleDeleteAllBoxes = () => {
