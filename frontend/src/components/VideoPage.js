@@ -1,8 +1,9 @@
 // External library imports
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import ReactDOM from "react-dom";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import axios from "axios";
+import logo from "../logo.svg";
 
 // MUI imports
 import Snackbar from "@mui/material/Snackbar";
@@ -430,6 +431,11 @@ function VideoPage() {
         <>
           <header className="app-header">
             <div className="header-sidebar left-header-sidebar"></div>
+            <div className="video-page-logo">
+              <Link to="/">
+                <img src={logo} alt="Your Logo" style={{ height: "50px" }} />
+              </Link>
+            </div>
             <div className="slider-container">
               <div className="frame-count-controls">
                 <button

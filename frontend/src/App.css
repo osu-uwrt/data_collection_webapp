@@ -329,7 +329,7 @@ h3 {
 }
 
 .left-header-sidebar {
-  flex-basis: 80px;
+  flex-basis: 40px;
 }
 
 .right-header-sidebar {
@@ -575,4 +575,13 @@ h3 {
   object-fit: cover;
   border-radius: 50%; /* ensures the image itself is also circular */
   border: 0.1px solid var(--ui-disabled);
+}
+
+.video-page-logo {
+  display: "flex";
+  justify-content: "center";
+  align-items: "center";
+  padding-left: "10px";
+  position: "relative";
+  left: "100px";
 }
