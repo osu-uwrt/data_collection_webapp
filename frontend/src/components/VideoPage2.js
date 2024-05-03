@@ -1,23 +1,29 @@
+// External library imports
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import ReactDOM from "react-dom";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import axios from "axios";
-import BoundingBox from "./BoundingBox";
-import LabelMenu from "./LabelMenu";
+import logo from "../logo.svg";
+
+// MUI imports
 import Snackbar from "@mui/material/Snackbar";
+import Slider from "@mui/material/Slider";
+import Slide from "@mui/material/Slide";
+import Alert from "@mui/material/Alert";
 import SaveIcon from "@mui/icons-material/Save";
 import RepeatIcon from "@mui/icons-material/Repeat";
 import LabelIcon from "@mui/icons-material/Label";
-import Slider from "@mui/material/Slider";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import LineStyleIcon from "@mui/icons-material/LineStyle";
+import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { updateInterpolationNumbers } from "./utils";
-import Slide from "@mui/material/Slide";
-import Alert from "@mui/material/Alert";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+
+// Internal file imports
+import LabelMenu from "./LabelMenu";
 import Polygon from "./Polygon";
+import { updateInterpolationNumbers } from "./utils";
 
 function TransitionRight(props) {
   return <Slide {...props} direction="right" />;
@@ -42,10 +48,12 @@ function VideoPage() {
   });
   const [currentFrame, setCurrentFrame] = useState(0);
   const [frameBoxes, setFrameBoxes] = useState({});
+  const [framePolygons, setFramePolygons] = useState({});
   const [carryBoxes, setCarryBoxes] = useState(false);
   const [loading, setLoading] = useState(true);
   const deleteRef = useRef(null);
   const [showLabels, setShowLabels] = useState(true);
+  const [drawPolygons, setDrawPolygons] = useState(true);
   const [runInterpolation, setRunInterpolation] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -62,7 +70,7 @@ function VideoPage() {
   const scale = Math.min(scaleX, scaleY);
 
   const toggleBoxVisibility = (index) => {
-    const updatedBoxesForFrame = [...frameBoxes[currentFrame]];
+    const updatedBoxesForFrame = [...framePolygons[currentFrame]];
 
     // Toggle visibility at the specified index
     if (updatedBoxesForFrame[index]) {
@@ -70,7 +78,7 @@ function VideoPage() {
         !updatedBoxesForFrame[index].visible;
     }
 
-    setFrameBoxes((prev) => ({
+    setFramePolygons((prev) => ({
       ...prev,
       [currentFrame]: updatedBoxesForFrame,
     }));
@@ -79,7 +87,7 @@ function VideoPage() {
   const toggleAllBoxVisibility = () => {
     setAllBoxesVisible(!allBoxesVisible);
     // Deep copy the frameBoxes object to ensure React detects changes
-    const updatedFrameBoxes = JSON.parse(JSON.stringify(frameBoxes));
+    const updatedFrameBoxes = JSON.parse(JSON.stringify(framePolygons));
 
     // Toggle visibility for every box of every frame
     for (let frame in updatedFrameBoxes) {
@@ -88,40 +96,53 @@ function VideoPage() {
       }
     }
 
-    setFrameBoxes(updatedFrameBoxes);
+    setFramePolygons(updatedFrameBoxes);
   };
 
-  const normalizeBoxesForSave = (boxes, videoWidth, videoHeight, scale) => {
-    const normalizedBoxes = { ...boxes };
-    for (let frame in normalizedBoxes) {
-      normalizedBoxes[frame] = normalizedBoxes[frame].map((box) => ({
-        ...box,
-        x: (box.x + box.width / 2) / scale / videoWidth,
-        y: (box.y + box.height / 2) / scale / videoHeight,
-        width: box.width / scale / videoWidth,
-        height: box.height / scale / videoHeight,
-      }));
-    }
-    return normalizedBoxes;
-  };
-
-  const scaleNormalizedBoxesOnLoad = (
-    boxes,
+  const normalizePolygonsForSave = (
+    polygons,
     videoWidth,
     videoHeight,
     scale
   ) => {
-    const scaledBoxes = { ...boxes };
-    for (let frame in scaledBoxes) {
-      scaledBoxes[frame] = scaledBoxes[frame].map((box) => ({
-        ...box,
-        x: box.x * videoWidth * scale - (box.width * videoWidth * scale) / 2,
-        y: box.y * videoHeight * scale - (box.height * videoHeight * scale) / 2,
-        width: box.width * videoWidth * scale,
-        height: box.height * videoHeight * scale,
+    const normalizedPolygons = { ...polygons };
+    for (let frame in normalizedPolygons) {
+      normalizedPolygons[frame] = normalizedPolygons[frame].map((polygon) => ({
+        ...polygon,
+        points: polygon.points.map((point) => ({
+          x: point.x / scale / videoWidth,
+          y: point.y / scale / videoHeight,
+        })),
+        // Add other necessary transformations
       }));
     }
-    return scaledBoxes;
+    return normalizedPolygons;
+  };
+
+  const scaleNormalizedPolygonsOnLoad = (
+    polygons,
+    videoWidth,
+    videoHeight,
+    scale
+  ) => {
+    const scaledPolygons = { ...polygons };
+    for (let frame in scaledPolygons) {
+      scaledPolygons[frame] = scaledPolygons[frame].map((polygon) => ({
+        ...polygon,
+        points: polygon.points.map((point) => ({
+          x: point.x * videoWidth * scale,
+          y: point.y * videoHeight * scale,
+        })),
+        // Retain other properties of the polygon as they are
+        class: polygon.class,
+        displayOrder: polygon.displayOrder,
+        interpolate: polygon.interpolate,
+        interpolationID: polygon.interpolationID,
+        interpolationNumber: polygon.interpolationNumber,
+        visible: polygon.visible,
+      }));
+    }
+    return scaledPolygons;
   };
 
   const handleSnackbarClose = (event, reason) => {
@@ -139,7 +160,7 @@ function VideoPage() {
 
   // Newly added state for class colors
   const [classBoxes, setClassBoxes] = useState({
-    class1: { strokeColor: "cyan", fillColor: "rgba(0, 255, 255, 0.25)" },
+    class1: { strokeColor: "red", fillColor: "rgba(255, 0, 0, 0.25)" },
     class2: { strokeColor: "limegreen", fillColor: "rgba(50, 205, 50, 0.25)" },
     class3: { strokeColor: "yellow", fillColor: "rgba(255, 255, 0, 0.25)" },
     class4: { strokeColor: "yellow", fillColor: "rgba(255, 255, 0, 0.25)" },
@@ -147,8 +168,8 @@ function VideoPage() {
   });
 
   useEffect(() => {
-    console.log("Updated Frame Boxes", frameBoxes);
-  }, [frameBoxes]);
+    console.log("Updated Frame Boxes", framePolygons);
+  }, [framePolygons]);
 
   useEffect(() => {
     const savedColors = localStorage.getItem("classBoxes");
@@ -180,26 +201,26 @@ function VideoPage() {
 
       // Fetching and scaling boxes
       try {
-        const boxesResponse = await axios.get(
-          `${BASE_URL}/data/frames/${videoId}/boxes.json`
+        const polygonsResponse = await axios.get(
+          `${BASE_URL}/data/frames/${videoId}/polygons.json`
         );
-        let boxesData = boxesResponse.data.boxes || {};
-        boxesData = scaleNormalizedBoxesOnLoad(
-          boxesData,
+        let polygonsData = polygonsResponse.data.polygons || {};
+        polygonsData = scaleNormalizedPolygonsOnLoad(
+          polygonsData,
           videoResponse.data.video_width,
           videoResponse.data.video_height,
           localScale
         );
 
         for (let i = 0; i < videoResponse.data.total_frames; i++) {
-          if (boxesData[i] === undefined) {
-            setFrameBoxes((prev) => ({
+          if (polygonsData[i] === undefined) {
+            setFramePolygons((prev) => ({
               ...prev,
               [i]: [],
             }));
           }
         }
-        setFrameBoxes(boxesData);
+        setFramePolygons(polygonsData);
       } catch (error) {
         console.error("Failed to fetch boxes data:", error);
       }
@@ -217,6 +238,10 @@ function VideoPage() {
     fetchData();
   }, [videoId]);
 
+  useEffect(() => {
+    console.log("framePolygons: ", framePolygons);
+  }, [currentFrame]);
+
   const handleKeyDown = useCallback(
     (event) => {
       if (event.key === "ArrowLeft") {
@@ -227,14 +252,16 @@ function VideoPage() {
         updateFrame(currentFrame + 1, carryBoxes);
       } else if (event.key === "Delete" || event.key === "Backspace") {
         handleDeleteClick();
+      } else if (event.key === "Control") {
+        setDrawPolygons(!drawPolygons);
       }
     },
-    [currentFrame, data.total_frames, carryBoxes, selected]
+    [currentFrame, data.total_frames, carryBoxes, selected, drawPolygons]
   );
 
   const handleDeleteAllBoxes = () => {
     if (window.confirm("Are you sure you want to delete all boxes?")) {
-      setFrameBoxes({});
+      setFramePolygons({});
       showSnackbar("All boxes deleted successfully!"); // Updated line
     }
   };
@@ -248,11 +275,11 @@ function VideoPage() {
 
   const deleteBoxAtIndex = (index) => {
     ReactDOM.unstable_batchedUpdates(() => {
-      const updatedBoxesForFrame = [...(frameBoxes[currentFrame] || [])];
+      const updatedBoxesForFrame = [...(framePolygons[currentFrame] || [])];
       updatedBoxesForFrame.splice(index, 1);
       updateInterpolationNumbers(updatedBoxesForFrame);
 
-      setFrameBoxes((prev) => ({
+      setFramePolygons((prev) => ({
         ...prev,
         [currentFrame]: updatedBoxesForFrame,
       }));
@@ -262,7 +289,7 @@ function VideoPage() {
   };
 
   const onChangeDisplayOrder = (draggedOrder, droppedOrder) => {
-    const boxesForCurrentFrame = [...frameBoxes[currentFrame]];
+    const boxesForCurrentFrame = [...framePolygons[currentFrame]];
 
     // Convert the displayOrder to array indices
     const draggedIndex = boxesForCurrentFrame.findIndex(
@@ -292,15 +319,16 @@ function VideoPage() {
       box.displayOrder = index;
     });
 
-    setFrameBoxes((prev) => ({
+    setFramePolygons((prev) => ({
       ...prev,
       [currentFrame]: boxesForCurrentFrame,
     }));
   };
 
-  const saveBoxes = async () => {
-    const boxesToSave = normalizeBoxesForSave(
-      frameBoxes,
+  // Function to save polygons
+  const savePolygons = async () => {
+    const polygonsToSave = normalizePolygonsForSave(
+      framePolygons,
       data.video_width,
       data.video_height,
       scale
@@ -308,23 +336,19 @@ function VideoPage() {
 
     const payload = {
       video_id: videoId,
-      video_width: data.video_width,
-      video_height: data.video_height,
-      boxes: boxesToSave,
+      polygons: polygonsToSave,
     };
 
-    console.log(payload);
     try {
-      await axios.post(`${BASE_URL}/save-boxes`, payload, {
+      await axios.post(`${BASE_URL}/save-polygons`, payload, {
         headers: {
           "Content-Type": "application/json",
         },
       });
-      console.log("Saving", payload.boxes);
-      showSnackbar("Boxes saved successfully!", "success");
+      showSnackbar("Polygons saved successfully!", "success");
     } catch (error) {
-      console.error("Failed to save boxes:", error);
-      showSnackbar("Failed to save boxes. Please try again.", "error");
+      console.error("Failed to save polygons:", error);
+      showSnackbar("Failed to save polygons. Please try again.", "error");
     }
   };
 
@@ -347,7 +371,7 @@ function VideoPage() {
     if (newFrame >= 0 && newFrame < data.total_frames) {
       setCurrentFrame(newFrame);
 
-      setFrameBoxes((prevFrameBoxes) => {
+      setFramePolygons((prevFrameBoxes) => {
         if (
           carryOver &&
           (!prevFrameBoxes[newFrame] || prevFrameBoxes[newFrame].length === 0)
@@ -364,26 +388,28 @@ function VideoPage() {
   };
 
   const toggleInterpolation = (frame, index) => {
-    const updatedBoxesForFrame = [...(frameBoxes[frame] || [])];
+    const updatedBoxesForFrame = [...(framePolygons[frame] || [])];
     if (updatedBoxesForFrame[index]) {
       updatedBoxesForFrame[index].interpolate =
         !updatedBoxesForFrame[index].interpolate;
       updateInterpolationNumbers(updatedBoxesForFrame);
 
-      setFrameBoxes((prev) => ({
+      setFramePolygons((prev) => ({
         ...prev,
         [frame]: updatedBoxesForFrame,
       }));
     }
   };
 
-  function getSliderMarks(frameBoxes, totalFrames, maxMarks = 10000) {
+  function getSliderMarks(framePolygons, totalFrames, maxMarks = 10000) {
     const spacing = Math.ceil(totalFrames / maxMarks);
     let reducedFrames = [];
 
     for (let i = 0; i < totalFrames; i += spacing) {
-      if (frameBoxes[i] && frameBoxes[i].length > 0) {
-        const hasInterpolation = frameBoxes[i].some((box) => box.interpolate);
+      if (framePolygons[i] && framePolygons[i].length > 0) {
+        const hasInterpolation = framePolygons[i].some(
+          (box) => box.interpolate
+        );
         reducedFrames.push({
           frame: i,
           interpolate: hasInterpolation,
@@ -405,6 +431,11 @@ function VideoPage() {
         <>
           <header className="app-header">
             <div className="header-sidebar left-header-sidebar"></div>
+            <div className="video-page-logo">
+              <Link to="/">
+                <img src={logo} alt="Your Logo" style={{ height: "50px" }} />
+              </Link>
+            </div>
             <div className="slider-container">
               <div className="frame-count-controls">
                 <button
@@ -469,7 +500,7 @@ function VideoPage() {
                   max={data.total_frames - 1}
                   value={currentFrame}
                   onChange={(e, newValue) => updateFrame(newValue, false)}
-                  marks={getSliderMarks(frameBoxes, data.total_frames)} // directly pass the result of getSliderMarks
+                  marks={getSliderMarks(framePolygons, data.total_frames)} // directly pass the result of getSliderMarks
                   sx={{
                     "& .MuiSlider-mark": {
                       height: 0.1,
@@ -477,7 +508,7 @@ function VideoPage() {
                   }}
                 />
                 <div className="interpolation-indicators">
-                  {getSliderMarks(frameBoxes, data.total_frames).map(
+                  {getSliderMarks(framePolygons, data.total_frames).map(
                     ({ value, interpolate }) =>
                       interpolate ? (
                         <div
@@ -529,7 +560,7 @@ function VideoPage() {
               </button>
               <button
                 className="icon-button"
-                onClick={saveBoxes}
+                onClick={savePolygons}
                 title="Save Boxes"
               >
                 <SaveIcon />
@@ -549,6 +580,17 @@ function VideoPage() {
                 <VisibilityIcon
                   style={{
                     color: allBoxesVisible ? "var(--highlight-text)" : "gray",
+                  }}
+                />
+              </button>
+              <button
+                className="icon-button"
+                onClick={() => setDrawPolygons(!drawPolygons)}
+                title="Toggle Polygon Drawing"
+              >
+                <EditIcon
+                  style={{
+                    color: drawPolygons ? "var(--highlight-text)" : "gray",
                   }}
                 />
               </button>
@@ -575,20 +617,20 @@ function VideoPage() {
                     height: `${data.video_height * scale}px`, // Adjusted height
                   }}
                 />
-                <BoundingBox
+                <Polygon
                   videoWidth={data.video_width * scale}
                   videoHeight={data.video_height * scale}
                   currentFrame={currentFrame}
-                  frameBoxes={frameBoxes}
-                  setFrameBoxes={setFrameBoxes}
-                  onDeleteRef={deleteRef}
-                  carryBoxes={carryBoxes}
-                  boxClasses={classBoxes}
+                  polygonClasses={classBoxes}
                   showLabels={showLabels}
-                  runInterpolation={runInterpolation}
-                  onInterpolationCompleted={onInterpolationCompleted}
+                  framePolygons={framePolygons}
+                  setFramePolygons={setFramePolygons}
                   selected={selected}
                   setSelected={setSelected}
+                  runInterpolation={runInterpolation}
+                  onInterpolationCompleted={onInterpolationCompleted}
+                  isDrawingEnabled={drawPolygons}
+                  setIsDrawingEnabled={setDrawPolygons}
                 />
               </div>
             </div>
@@ -596,15 +638,15 @@ function VideoPage() {
             <div className="sidebar right-sidebar">
               <LabelMenu
                 key={currentFrame}
-                boundingBoxes={frameBoxes}
+                boundingBoxes={framePolygons}
                 currentFrame={currentFrame}
                 onClassChange={(index, newClass) => {
-                  const updatedBoxesForFrame = [...frameBoxes[currentFrame]];
+                  const updatedBoxesForFrame = [...framePolygons[currentFrame]];
                   updatedBoxesForFrame[index].class = newClass;
 
                   updateInterpolationNumbers(updatedBoxesForFrame);
 
-                  setFrameBoxes((prev) => ({
+                  setFramePolygons((prev) => ({
                     ...prev,
                     [currentFrame]: updatedBoxesForFrame,
                   }));

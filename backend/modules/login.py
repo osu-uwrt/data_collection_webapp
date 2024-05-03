@@ -14,15 +14,25 @@ def get_db_conn():
 
 def generate_token(username, user_id, team_id):
     payload = {
-        "username": username,
+        "username": username,                                                                                                                                                           
         "user_id": user_id,
         "team_id": team_id
     }
     token = jwt.encode(payload, SECRET_KEY, algorithm='HS256')
     return token
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['POST', 'OPTIONS'])
 def login():
+    if request.method == 'OPTIONS':
+        # Allows all CORS requests to the /login route
+        response = jsonify({})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add("Access-Control-Allow-Headers", "*")
+        response.headers.add("Access-Control-Allow-Methods", "*")
+        return response
+    
+    # Your existing login logic here
+    print(request.headers.get('Origin'))
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request"}), 400
 

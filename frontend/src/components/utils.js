@@ -34,7 +34,6 @@ export const updateInterpolationNumbers = (boxesForFrame) => {
   for (const box of boxesForFrame) {
     if (!box.interpolate) {
       box.interpolationNumber = null;
-      box.interpolationID = null;
     }
   }
 };

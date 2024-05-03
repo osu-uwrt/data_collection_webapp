@@ -94,6 +94,7 @@ export default function Login() {
   };
 
   const handleSubmit = async (e) => {
+    console.log(e);
     e.preventDefault();
 
     if (validate()) {

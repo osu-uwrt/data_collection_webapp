@@ -36,6 +36,7 @@ function BoundingBox({
   const [snackbarSeverity, setSnackbarSeverity] = useState("error");
   const [currentFrameBoxes, setCurrentFrameBoxes] = useState([]);
   const [previousLength, setPreviousLength] = useState(0);
+  const [lastModifiedFrame, setLastModifiedFrame] = useState(null);
 
   const MIN_WIDTH = 10;
   const MIN_HEIGHT = 10;
@@ -49,6 +50,21 @@ function BoundingBox({
 
     setPreviousLength(currentLength);
   }, [currentFrameBoxes]);
+
+  useEffect(() => {
+    if (lastModifiedFrame !== null && lastModifiedFrame < currentFrame) {
+      // Propagate the box data from the last modified frame to all subsequent frames until the current frame
+      let newFrameBoxes = { ...frameBoxes };
+      console.log("Test");
+      for (let frame = lastModifiedFrame + 1; frame <= currentFrame; frame++) {
+        newFrameBoxes[frame] = newFrameBoxes[lastModifiedFrame].map((box) => ({
+          ...box,
+          interpolate: false,
+        })); // Make sure to reset the interpolate flag
+      }
+      setFrameBoxes(newFrameBoxes);
+    }
+  }, [currentFrame, lastModifiedFrame, frameBoxes, setFrameBoxes]);
 
   useEffect(() => {
     console.log(dragging); // This will print the updated value whenever dragging changes
@@ -500,23 +516,33 @@ function BoundingBox({
   };
 
   const performInterpolation = (frameBoxes) => {
-    const sortedFrames = Object.keys(frameBoxes).sort((a, b) => a - b);
+    // Create a copy of frameBoxes
+    const updatedFrameBoxes = { ...frameBoxes };
+
+    console.log("Before interpolation:", JSON.stringify(updatedFrameBoxes));
+
+    const framesWithInterpolation = Object.keys(updatedFrameBoxes).filter(
+      (frame) => updatedFrameBoxes[frame].some((box) => box.interpolate)
+    );
+
+    const sortedFrames = framesWithInterpolation.sort((a, b) => a - b);
+
     let startFrame = null;
 
     for (let i = 0; i < sortedFrames.length; i++) {
       const frame = sortedFrames[i];
-      if (frameBoxes[frame].some((box) => box.interpolate)) {
+      if (updatedFrameBoxes[frame].some((box) => box.interpolate)) {
         if (startFrame === null) {
           startFrame = frame;
         } else {
           const endFrame = frame;
 
-          frameBoxes[startFrame].forEach((startBox) => {
+          updatedFrameBoxes[startFrame].forEach((startBox) => {
             if (!startBox.interpolate) {
               return;
             }
 
-            const endBox = frameBoxes[endFrame].find(
+            const endBox = updatedFrameBoxes[endFrame].find(
               (box) =>
                 box.interpolationID === startBox.interpolationID &&
                 box.interpolate
@@ -527,9 +553,16 @@ function BoundingBox({
             }
 
             for (let j = parseInt(startFrame) + 1; j < endFrame; j++) {
-              if (!frameBoxes[j]) {
-                frameBoxes[j] = [];
+              if (!updatedFrameBoxes[j]) {
+                updatedFrameBoxes[j] = [];
+              } else {
+                //console.log("Frame: " + j + " Before: " + updatedFrameBoxes[j]);
+                updatedFrameBoxes[j] = updatedFrameBoxes[j].filter(
+                  (box) => box.interpolationID !== startBox.interpolationID
+                );
+                //console.log("Frame: " + j + " After: " + updatedFrameBoxes[j]);
               }
+
               const alpha = (j - startFrame) / (endFrame - startFrame);
               const interpolatedBox = {
                 x: startBox.x + alpha * (endBox.x - startBox.x),
@@ -545,14 +578,14 @@ function BoundingBox({
                 visible: true,
               };
 
-              const correctIndex = frameBoxes[j].findIndex(
+              const correctIndex = updatedFrameBoxes[j].findIndex(
                 (box) => box.interpolationID === interpolatedBox.interpolationID
               );
 
               if (correctIndex === -1) {
-                frameBoxes[j].push(interpolatedBox);
+                updatedFrameBoxes[j].push(interpolatedBox);
               } else {
-                frameBoxes[j][correctIndex] = interpolatedBox;
+                updatedFrameBoxes[j][correctIndex] = interpolatedBox;
               }
             }
           });
@@ -560,7 +593,9 @@ function BoundingBox({
         }
       }
     }
-    return frameBoxes;
+
+    // Update the state with the modified copy
+    setFrameBoxes(updatedFrameBoxes);
   };
 
   useEffect(() => {
@@ -580,7 +615,7 @@ function BoundingBox({
     if (runInterpolation) {
       if (validateInterpolation(frameBoxes)) {
         performInterpolation(frameBoxes);
-        resetInterpolationFlags(frameBoxes);
+        //resetInterpolationFlags(frameBoxes);
 
         setSnackbarMessage(`Interpolation successful!`);
         setSnackbarSeverity("success");
@@ -616,11 +651,15 @@ function BoundingBox({
         height: normalizedBox.height,
       });
       setLastSelectedClass(normalizedBox.class);
-      setLastInterpolate(normalizedBox.interpolate);
-
-      const updatedBoxesForFrame = currentFrameBoxes;
-      updatedBoxesForFrame[dragData.boxIndex] = normalizedBox;
-      setCurrentFrameBoxes(updatedBoxesForFrame);
+      //setLastInterpolate(normalizedBox.interpolate);
+      setCurrentFrameBoxes((currentBoxes) => {
+        const updatedBoxes = [...currentBoxes];
+        updatedBoxes[dragData.boxIndex] = {
+          ...normalizedBox,
+          interpolate: true,
+        };
+        return updatedBoxes;
+      });
       setDragData({ boxIndex: null, corner: null });
       return;
     }
@@ -640,6 +679,7 @@ function BoundingBox({
         width: currentFrameBoxes[dragData.boxIndex].width,
         height: currentFrameBoxes[dragData.boxIndex].height,
       });
+
       setLastSelectedClass(currentFrameBoxes[dragData.boxIndex].class);
       setLastInterpolate(currentFrameBoxes[dragData.boxIndex].interpolate);
       setDragging(false);
