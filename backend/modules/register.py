@@ -62,7 +62,7 @@ def register():
         return jsonify({"msg": "Email already in use"}), 400
 
     # Hash the password and save to DB
-    hashed_password = generate_password_hash(password, method='sha256')
+    hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
     
     c.execute('''
         INSERT INTO Users (username, hashed_password, email)
