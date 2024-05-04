@@ -85,3 +85,8 @@ Please read CONTRIBUTING.md for details on our code of conduct, and the process 
 ## License
 
 This project is licensed under the MIT License
+
+## Notes
+
+Polygon Labeling Component:
+Please note that the polygon labeling feature is currently a separate React component. It functions as a replacement for videoPage under the name videoPage2. Renaming the components will switch to polygon mode, but it's not fully integrated and is still a work in progress.
