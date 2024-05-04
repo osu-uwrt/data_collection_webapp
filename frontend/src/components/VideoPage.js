@@ -352,9 +352,17 @@ function VideoPage() {
           carryOver &&
           (!prevFrameBoxes[newFrame] || prevFrameBoxes[newFrame].length === 0)
         ) {
+          // Carry over the boxes, and set interpolate to false
+          const carriedOverBoxes = (prevFrameBoxes[currentFrame] || []).map(
+            (box) => ({
+              ...box,
+              interpolate: false, // Ensure interpolate is set to false
+            })
+          );
+
           return {
             ...prevFrameBoxes,
-            [newFrame]: [...(prevFrameBoxes[currentFrame] || [])],
+            [newFrame]: carriedOverBoxes,
           };
         }
 
@@ -591,6 +599,7 @@ function VideoPage() {
                   boxClasses={classBoxes}
                   showLabels={showLabels}
                   runInterpolation={runInterpolation}
+                  setRunInterpolation={setRunInterpolation}
                   onInterpolationCompleted={onInterpolationCompleted}
                   selected={selected}
                   setSelected={setSelected}

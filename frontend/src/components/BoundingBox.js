@@ -19,6 +19,7 @@ function BoundingBox({
   boxClasses,
   showLabels,
   runInterpolation,
+  setRunInterpolation,
   onInterpolationCompleted,
   selected,
   setSelected,
@@ -310,9 +311,14 @@ function BoundingBox({
   );
 
   const handleMouseMove = (event) => {
-    const x = event.offsetX;
-    const y = event.offsetY;
+    // Calculate position relative to the canvas
     const canvas = canvasRef.current;
+    const boundingRect = canvasRef.current.getBoundingClientRect();
+    let x = event.clientX - boundingRect.left;
+    let y = event.clientY - boundingRect.top;
+
+    x = Math.max(0, Math.min(x, boundingRect.width));
+    y = Math.max(0, Math.min(y, boundingRect.height));
 
     if (
       dragData.boxIndex !== null &&
@@ -443,16 +449,6 @@ function BoundingBox({
     setCurrentFrameBoxes(updatedBoxesForFrame);
   };
 
-  const resetInterpolationFlags = (frameBoxes) => {
-    for (let frame in frameBoxes) {
-      frameBoxes[frame].forEach((box) => {
-        box.interpolate = false;
-        box.interpolationNumber = null;
-        box.interpolationID = null;
-      });
-    }
-  };
-
   const validateInterpolation = (frameBoxes) => {
     let activeInterpolationFrames = [];
     let activeInterpolationSignatures = {};
@@ -474,11 +470,11 @@ function BoundingBox({
     }
 
     if (activeInterpolationFrames.length < 2) {
-      setSnackbarMessage(
-        "Interpolation failed: Less than 2 frames have boxes flagged for interpolation."
-      );
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
+      // setSnackbarMessage(
+      //   "Interpolation failed: Less than 2 frames have boxes flagged for interpolation."
+      // );
+      // setSnackbarSeverity("error");
+      // setSnackbarOpen(true);
       return false;
     }
 
@@ -492,21 +488,21 @@ function BoundingBox({
       const currentSignatureSet = new Set(currentBoxesSignature);
 
       if (referenceSignaturesSet.size !== currentSignatureSet.size) {
-        setSnackbarMessage(
-          `Interpolation failed: Inconsistent number of boxes flagged for interpolation. Found ${referenceSignaturesSet.size} on frame ${referenceFrame} and ${currentSignatureSet.size} on frame ${frame}.`
-        );
-        setSnackbarSeverity("error");
-        setSnackbarOpen(true);
+        // setSnackbarMessage(
+        //   `Interpolation failed: Inconsistent number of boxes flagged for interpolation. Found ${referenceSignaturesSet.size} on frame ${referenceFrame} and ${currentSignatureSet.size} on frame ${frame}.`
+        // );
+        // setSnackbarSeverity("error");
+        // setSnackbarOpen(true);
         return false;
       }
 
       for (let signature of referenceSignaturesSet) {
         if (!currentSignatureSet.has(signature)) {
-          setSnackbarMessage(
-            `Interpolation failed: Mismatch in classes of boxes flagged for interpolation between frame ${referenceFrame} and frame ${frame}.`
-          );
-          setSnackbarSeverity("error");
-          setSnackbarOpen(true);
+          //setSnackbarMessage(
+          //  `Interpolation failed: Mismatch in classes of boxes flagged for interpolation between frame ${referenceFrame} and frame ${frame}.`
+          //);
+          //setSnackbarSeverity("error");
+          //setSnackbarOpen(true);
           return false;
         }
       }
@@ -574,7 +570,7 @@ function BoundingBox({
                 interpolate: false,
                 interpolationNumber: null,
                 interpolationID: startBox.interpolationID,
-                displayOrder: null,
+                displayOrder: startBox.displayOrder,
                 visible: true,
               };
 
@@ -617,9 +613,7 @@ function BoundingBox({
         performInterpolation(frameBoxes);
         //resetInterpolationFlags(frameBoxes);
 
-        setSnackbarMessage(`Interpolation successful!`);
-        setSnackbarSeverity("success");
-        setSnackbarOpen(true);
+        //setSnackbarOpen(true);
       } else {
         console.log("Invalid Interpolation");
       }
@@ -650,16 +644,21 @@ function BoundingBox({
         width: normalizedBox.width,
         height: normalizedBox.height,
       });
+
       setLastSelectedClass(normalizedBox.class);
-      //setLastInterpolate(normalizedBox.interpolate);
+      setLastInterpolate(normalizedBox.interpolate);
       setCurrentFrameBoxes((currentBoxes) => {
         const updatedBoxes = [...currentBoxes];
         updatedBoxes[dragData.boxIndex] = {
           ...normalizedBox,
-          interpolate: true,
+          interpolate: lastInterpolate,
         };
+
         return updatedBoxes;
       });
+
+      console.log("AAA");
+
       setDragData({ boxIndex: null, corner: null });
       return;
     }
@@ -686,7 +685,10 @@ function BoundingBox({
 
       const normalizedBox = normalizeBox(currentFrameBoxes[dragData.boxIndex]);
       const updatedBoxesForFrame = currentFrameBoxes;
-      updatedBoxesForFrame[dragData.boxIndex] = normalizedBox;
+      updatedBoxesForFrame[dragData.boxIndex] = {
+        ...normalizedBox,
+        interpolate: true, // Set interpolate to true on move/resize
+      };
 
       setCurrentFrameBoxes(updatedBoxesForFrame);
       setDragData({ boxIndex: null, corner: null, startX: null, startY: null });
@@ -695,6 +697,9 @@ function BoundingBox({
       ...prev,
       [currentFrame]: currentFrameBoxes,
     }));
+
+    updateInterpolationNumbers(currentFrameBoxes);
+    setRunInterpolation(true);
   };
 
   useEffect(() => {
@@ -706,12 +711,12 @@ function BoundingBox({
   useEffect(() => {
     const canvas = canvasRef.current;
     canvas.addEventListener("mousedown", handleMouseDown);
-    canvas.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
 
     return () => {
       canvas.removeEventListener("mousedown", handleMouseDown);
-      canvas.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
   }, [handleMouseDown, handleMouseMove, handleMouseUp]);
@@ -835,19 +840,19 @@ function BoundingBox({
       interpolate: lastInterpolate,
       interpolationNumber: null,
       interpolationID: null,
-      displayOrder: null,
+      displayOrder: null, // Will be set based on existing boxes
       visible: true,
     };
 
     const currentBoxes = currentFrameBoxes || [];
     console.log("currentBoxes", currentBoxes);
-    // Sort the current boxes by their displayOrder
-    currentBoxes.sort((a, b) => a.displayOrder - b.displayOrder);
-    currentBoxes.forEach((box, index) => {
-      box.displayOrder = index + 1; // increment displayOrder to make room for the new box at position 0
-    });
 
-    newBox.displayOrder = 0; // new box will always be on top based on your previous logic
+    // Calculate the maximum displayOrder of existing boxes
+    const maxDisplayOrder = currentBoxes.reduce((max, box) => {
+      return Math.max(max, box.displayOrder);
+    }, -1); // Start with -1 so that if there are no boxes, the max will be -1 and new box's order will be 0
+
+    newBox.displayOrder = maxDisplayOrder + 1; // Set displayOrder to highest existing order + 1
 
     newBox = normalizeBox(newBox);
     newBox = clampBoxToCanvas(newBox, videoWidth, videoHeight);
