@@ -78,6 +78,32 @@ Now, navigate to `http://localhost:3000` in your browser to see the application 
 - **React** - The frontend library.
 - **SQLite** - The database technology.
 
+## Controls
+
+### Boxing
+
+To create a box:
+- **Start a Box**: Hold down `Ctrl` (or `Cmd` on Mac) and click the desired starting point on the canvas. Drag the mouse to adjust the box size.
+- **Complete the Box**: Release the mouse button to finalize the box.
+
+To duplicate a box:
+- **Duplicate a Box**: After selecting a box, press `Shift` and click to create a new box based on the last one you interacted with.
+
+To move a box:
+- **Move a Box**: Click and hold inside the boundaries of an existing box, then drag to reposition it.
+
+### Polygons
+
+To create a polygon:
+- **Start Drawing**: Click the pencil icon to begin drawing. Click to place each vertex.
+- **Complete the Polygon**: Click on the starting point to close the loop and complete the polygon.
+
+To modify a polygon:
+- **Remove a Vertex**: Right-click on a vertex to remove it from the polygon.
+
+To move a polygon:
+- **Move a Polygon**: Click and hold inside the boundaries of an existing polygon, then drag to reposition it.
+
 ## Contributing
 
 Please read CONTRIBUTING.md for details on our code of conduct, and the process for submitting pull requests to us.
