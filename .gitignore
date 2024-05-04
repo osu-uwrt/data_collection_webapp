@@ -33,3 +33,6 @@ yarn-debug.log*
 yarn-error.log*
 
 node_modules
+
+# Personal todo list
+todo.txt
