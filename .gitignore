@@ -12,6 +12,7 @@
 # Backend Python files
 /backend/*.pyc
 /backend/__pycache__/
+/backend/modules/__pycache__/
 
 # Virtual env
 /backend/venv
