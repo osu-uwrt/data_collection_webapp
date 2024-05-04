@@ -4,8 +4,6 @@ import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import Slide from "@mui/material/Slide";
 
-//DRAG OFF CANVAS FIX
-
 function TransitionRight(props) {
   return <Slide {...props} direction="right" />;
 }
@@ -228,7 +226,7 @@ function BoundingBox({
       let newlySelectedBoxIndex = null;
       let isDragging = dragging;
 
-      if (event.ctrlKey) {
+      if (event.ctrlKey || event.metaKey) {
         setSelected(null);
         setCreatingBox(true);
         setInitialPosition({ x, y });

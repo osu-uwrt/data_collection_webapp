@@ -129,14 +129,14 @@ function TeamsPage() {
                 className="team-link"
               >
                 <div className="team-thumbnail">
-                  <img
-                    src={
-                      team.thumbnail
-                        ? `${BASE_URL}/data/teams/${team.team_id}/${team.thumbnail}`
-                        : "path_to_default_thumbnail"
-                    }
-                    alt={`Team ${team.team_name}`}
-                  />
+                  {team.thumbnail ? (
+                    <img
+                      src={`${BASE_URL}/data/teams/${team.team_id}/${team.thumbnail}`}
+                      alt={`Team ${team.team_name}`}
+                    />
+                  ) : (
+                    <div className="blank-thumbnail"></div>
+                  )}
                 </div>
                 <p className="team-name">{team.team_name}</p>
               </Link>
