@@ -13,8 +13,9 @@
 /backend/*.pyc
 /backend/__pycache__/
 
-# Possibly add the virtual environment folder if it's in the backend directory
-# /backend/venv
+# Virtual env
+/backend/venv
+/venv
 
 # misc
 .DS_Store
